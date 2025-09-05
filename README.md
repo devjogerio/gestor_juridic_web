@@ -210,7 +210,7 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 Para suporte e dúvidas:
 - Abra uma issue no GitHub
-- Entre em contato através do email: [forucolors.dev@outlook.com.br]
+- Entre em contato através do email: [fourcolors.dev@outlook.com.br]
 
 ## 📚 Documentação Adicional
 
