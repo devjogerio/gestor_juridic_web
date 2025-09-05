@@ -1,0 +1,625 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ processo.numero_processo }} - Sistema de Gestão Jurídica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .process-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .process-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.1);
+        transform: rotate(45deg);
+    }
+    
+    .process-number {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .process-subject {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+    
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .info-card-header {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .info-card-title {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .info-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .info-value {
+        color: #495057;
+        font-size: 1rem;
+        margin: 0;
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -2.5rem;
+        top: 1.5rem;
+        width: 12px;
+        height: 12px;
+        background: #007bff;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 0 3px #e9ecef;
+    }
+    
+    .timeline-date {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+    
+    .timeline-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+    
+    .timeline-description {
+        color: #6c757d;
+        margin: 0;
+    }
+    
+    .action-buttons {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+    
+    .quick-stats {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .document-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .document-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+    
+    .document-icon {
+        width: 40px;
+        height: 40px;
+        background: #007bff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .priority-indicator {
+        width: 4px;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 15px 0 0 15px;
+    }
+    
+    .priority-alta { background-color: #dc3545; }
+    .priority-media { background-color: #ffc107; }
+    .priority-baixa { background-color: #28a745; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'processos:processo_list' %}">
+                <i class="fas fa-gavel me-1"></i>Processos
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            {{ processo.numero_processo }}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+{{ processo.numero_processo }}
+<div class="d-flex align-items-center ms-auto">
+    <a href="{% url 'processos:processo_update' processo.pk %}" class="btn btn-outline-primary me-2">
+        <i class="fas fa-edit me-2"></i>Editar
+    </a>
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-cog me-2"></i>Ações
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item" href="#">
+                    <i class="fas fa-calendar-plus me-2"></i>Agendar Compromisso
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'documentos:documento_create' %}?processo={{ processo.pk }}">
+                    <i class="fas fa-file-plus me-2"></i>Adicionar Documento
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'processos:andamento_create' processo.pk %}">
+                    <i class="fas fa-plus me-2"></i>Novo Andamento
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item" href="{% url 'processos:processo_relatorio' processo.pk %}">
+                    <i class="fas fa-file-pdf me-2"></i>Gerar Relatório
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item text-danger" href="{% url 'processos:processo_delete' processo.pk %}" 
+                   onclick="return confirm('Tem certeza que deseja excluir este processo?')">
+                    <i class="fas fa-trash me-2"></i>Excluir Processo
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Coluna Principal -->
+    <div class="col-lg-8">
+        <!-- Cabeçalho do Processo -->
+        <div class="process-header position-relative">
+            <div class="priority-indicator priority-{{ processo.prioridade }}"></div>
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="process-number">{{ processo.numero_processo }}</div>
+                    <div class="process-subject">{{ processo.assunto }}</div>
+                    <div class="d-flex align-items-center gap-3">
+                        {% if processo.status == 'ativo' %}
+                            <span class="badge bg-success status-badge">Ativo</span>
+                        {% elif processo.status == 'suspenso' %}
+                            <span class="badge bg-warning status-badge">Suspenso</span>
+                        {% elif processo.status == 'finalizado' %}
+                            <span class="badge bg-info status-badge">Finalizado</span>
+                        {% elif processo.status == 'arquivado' %}
+                            <span class="badge bg-secondary status-badge">Arquivado</span>
+                        {% endif %}
+                        
+                        <span class="badge bg-light text-dark status-badge">
+                            Prioridade {{ processo.get_prioridade_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if processo.valor_causa %}
+                        <div class="mb-2">
+                            <small class="opacity-75">Valor da Causa</small>
+                            <div class="h4 mb-0">R$ {{ processo.valor_causa|floatformat:2 }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Estatísticas Rápidas -->
+        <div class="quick-stats">
+            <div class="row">
+                <div class="col-3 stat-item">
+                    <div class="stat-number">{{ processo.andamentos.count }}</div>
+                    <div class="stat-label">Andamentos</div>
+                </div>
+                <div class="col-3 stat-item">
+                    <div class="stat-number">{{ processo.documentos.count }}</div>
+                    <div class="stat-label">Documentos</div>
+                </div>
+                <div class="col-3 stat-item">
+                    <div class="stat-number">{{ processo.prazos.count }}</div>
+                    <div class="stat-label">Prazos</div>
+                </div>
+                <div class="col-3 stat-item">
+                    <div class="stat-number">{{ processo.compromissos.count }}</div>
+                    <div class="stat-label">Compromissos</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informações Básicas -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <h5 class="info-card-title">
+                    <i class="fas fa-info-circle me-2"></i>Informações Básicas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">Cliente</div>
+                            <p class="info-value">
+                                <a href="{% url 'clientes:cliente_detail' processo.cliente.pk %}" class="text-decoration-none">
+                                    {{ processo.cliente.nome }}
+                                </a>
+                            </p>
+                        </div>
+                        
+                        {% if processo.tribunal %}
+                        <div class="info-item">
+                            <div class="info-label">Tribunal</div>
+                            <p class="info-value">{{ processo.tribunal }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if processo.vara %}
+                        <div class="info-item">
+                            <div class="info-label">Vara</div>
+                            <p class="info-value">{{ processo.vara }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if processo.juiz %}
+                        <div class="info-item">
+                            <div class="info-label">Juiz</div>
+                            <p class="info-value">{{ processo.juiz }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">Data de Cadastro</div>
+                            <p class="info-value">{{ processo.data_cadastro|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        
+                        {% if processo.data_distribuicao %}
+                        <div class="info-item">
+                            <div class="info-label">Data de Distribuição</div>
+                            <p class="info-value">{{ processo.data_distribuicao|date:"d/m/Y" }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if processo.area_direito %}
+                        <div class="info-item">
+                            <div class="info-label">Área do Direito</div>
+                            <p class="info-value">{{ processo.area_direito }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if processo.tipo_acao %}
+                        <div class="info-item">
+                            <div class="info-label">Tipo de Ação</div>
+                            <p class="info-value">{{ processo.tipo_acao }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Descrição -->
+        {% if processo.descricao %}
+        <div class="info-card">
+            <div class="info-card-header">
+                <h5 class="info-card-title">
+                    <i class="fas fa-align-left me-2"></i>Descrição
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ processo.descricao|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Andamentos -->
+        <div class="info-card">
+            <div class="info-card-header d-flex justify-content-between align-items-center">
+                <h5 class="info-card-title">
+                    <i class="fas fa-history me-2"></i>Andamentos Recentes
+                </h5>
+                <a href="{% url 'processos:andamento_create' processo.pk %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i>Novo
+                </a>
+            </div>
+            <div class="card-body">
+                {% if processo.andamentos.all %}
+                    <div class="timeline">
+                        {% for andamento in processo.andamentos.all|slice:":5" %}
+                        <div class="timeline-item">
+                            <div class="timeline-date">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ andamento.data|date:"d/m/Y H:i" }}
+                            </div>
+                            <div class="timeline-title">{{ andamento.titulo }}</div>
+                            {% if andamento.descricao %}
+                                <p class="timeline-description">{{ andamento.descricao|truncatewords:20 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if processo.andamentos.count > 5 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'processos:andamento_list' processo.pk %}" class="btn btn-outline-primary">
+                                Ver todos os {{ processo.andamentos.count }} andamentos
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Nenhum andamento registrado ainda.</p>
+                        <a href="{% url 'processos:andamento_create' processo.pk %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Primeiro Andamento
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Coluna Lateral -->
+    <div class="col-lg-4">
+        <!-- Botões de Ação -->
+        <div class="action-buttons">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h5 class="info-card-title">
+                        <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar-plus me-2"></i>Agendar Compromisso
+                        </a>
+                        <a href="{% url 'documentos:documento_create' %}?processo={{ processo.pk }}" class="btn btn-outline-success">
+                            <i class="fas fa-file-plus me-2"></i>Adicionar Documento
+                        </a>
+                        <a href="{% url 'processos:andamento_create' processo.pk %}" class="btn btn-outline-info">
+                            <i class="fas fa-plus me-2"></i>Novo Andamento
+                        </a>
+                        <a href="{% url 'financeiro:movimentacao_create' %}?processo={{ processo.pk }}" class="btn btn-outline-warning">
+                            <i class="fas fa-dollar-sign me-2"></i>Movimentação Financeira
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Prazos Próximos -->
+        {% if processo.prazos.all %}
+        <div class="info-card">
+            <div class="info-card-header">
+                <h5 class="info-card-title">
+                    <i class="fas fa-clock me-2"></i>Prazos Próximos
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for prazo in processo.prazos.all|slice:":3" %}
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        {% if prazo.dias_restantes <= 0 %}
+                            <span class="badge bg-danger">Vencido</span>
+                        {% elif prazo.dias_restantes <= 3 %}
+                            <span class="badge bg-warning">{{ prazo.dias_restantes }}d</span>
+                        {% else %}
+                            <span class="badge bg-success">{{ prazo.dias_restantes }}d</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">{{ prazo.descricao }}</div>
+                        <small class="text-muted">{{ prazo.data_vencimento|date:"d/m/Y" }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Documentos Recentes -->
+        {% if processo.documentos.all %}
+        <div class="info-card">
+            <div class="info-card-header">
+                <h5 class="info-card-title">
+                    <i class="fas fa-file-alt me-2"></i>Documentos Recentes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for documento in processo.documentos.all|slice:":3" %}
+                <div class="document-item">
+                    <div class="d-flex align-items-center">
+                        <div class="document-icon me-3">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">{{ documento.nome }}</div>
+                            <small class="text-muted">{{ documento.data_upload|date:"d/m/Y" }}</small>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                    data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ documento.arquivo.url }}" target="_blank">
+                                        <i class="fas fa-eye me-2"></i>Visualizar
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ documento.arquivo.url }}" download>
+                                        <i class="fas fa-download me-2"></i>Download
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if processo.documentos.count > 3 %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'documentos:documento_list' %}?processo={{ processo.pk }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            Ver todos os {{ processo.documentos.count }} documentos
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Observações -->
+        {% if processo.observacoes %}
+        <div class="info-card">
+            <div class="info-card-header">
+                <h5 class="info-card-title">
+                    <i class="fas fa-sticky-note me-2"></i>Observações
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ processo.observacoes|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confirmação de exclusão
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteLinks = document.querySelectorAll('[onclick*="confirm"]');
+    deleteLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Tem certeza que deseja excluir este processo? Esta ação não pode ser desfeita.')) {
+                window.location.href = this.href;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

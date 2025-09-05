@@ -1,0 +1,819 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ documento.nome }} - Sistema de Gestão Jurídica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .document-header {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3);
+    }
+    
+    .document-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .document-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+    }
+    
+    .document-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .meta-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    
+    .meta-content {
+        flex: 1;
+    }
+    
+    .meta-label {
+        font-size: 0.8rem;
+        opacity: 0.8;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .meta-value {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .file-type-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .file-type-pdf {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+    
+    .file-type-doc {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    }
+    
+    .file-type-img {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .file-type-other {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .card-header-custom {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .card-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .card-body-custom {
+        padding: 2rem;
+    }
+    
+    .description-text {
+        color: #495057;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        margin-bottom: 0;
+    }
+    
+    .tags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    
+    .tag-item {
+        background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+        color: #495057;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border: 1px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .tag-item:hover {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+    
+    .file-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .file-info-item {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .file-info-item:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+    }
+    
+    .file-info-icon {
+        font-size: 2rem;
+        color: #007bff;
+        margin-bottom: 1rem;
+    }
+    
+    .file-info-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .file-info-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .btn-action {
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .btn-download {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .btn-download:hover {
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        color: white;
+    }
+    
+    .btn-edit {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        color: #212529;
+    }
+    
+    .btn-edit:hover {
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        color: #212529;
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        color: white;
+    }
+    
+    .btn-back {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+    }
+    
+    .btn-back:hover {
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+        color: white;
+    }
+    
+    .preview-container {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        border: 2px dashed #dee2e6;
+        margin-bottom: 2rem;
+    }
+    
+    .preview-icon {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+    
+    .preview-text {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .related-items {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        margin-bottom: 2rem;
+    }
+    
+    .related-item {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .related-item:last-child {
+        border-bottom: none;
+    }
+    
+    .related-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .related-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    
+    .related-content {
+        flex: 1;
+    }
+    
+    .related-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+    
+    .related-subtitle {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .version-history {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+    
+    .version-item {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .version-item:last-child {
+        border-bottom: none;
+    }
+    
+    .version-number {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    .version-info {
+        flex: 1;
+    }
+    
+    .version-date {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+    
+    .version-user {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+        .document-title {
+            font-size: 1.5rem;
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .document-meta {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-action {
+            justify-content: center;
+        }
+        
+        .file-info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'documentos:documento_list' %}">
+                <i class="fas fa-file-alt me-1"></i>Documentos
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            {{ documento.nome|truncatechars:30 }}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+Detalhes do Documento
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho do Documento -->
+<div class="document-header">
+    <div class="document-title">
+        {% if documento.arquivo %}
+            {% if '.pdf' in documento.arquivo.name|lower %}
+                <div class="file-type-icon file-type-pdf">PDF</div>
+            {% elif '.doc' in documento.arquivo.name|lower or '.docx' in documento.arquivo.name|lower %}
+                <div class="file-type-icon file-type-doc">DOC</div>
+            {% elif '.jpg' in documento.arquivo.name|lower or '.png' in documento.arquivo.name|lower or '.jpeg' in documento.arquivo.name|lower %}
+                <div class="file-type-icon file-type-img">IMG</div>
+            {% else %}
+                <div class="file-type-icon file-type-other">FILE</div>
+            {% endif %}
+        {% else %}
+            <div class="file-type-icon file-type-other">FILE</div>
+        {% endif %}
+        
+        <div>
+            <div>{{ documento.nome }}</div>
+            <div class="document-subtitle">{{ documento.get_tipo_display }}</div>
+        </div>
+    </div>
+    
+    <div class="document-meta">
+        {% if documento.cliente %}
+        <div class="meta-item">
+            <div class="meta-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="meta-content">
+                <div class="meta-label">Cliente</div>
+                <div class="meta-value">{{ documento.cliente.nome }}</div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if documento.processo %}
+        <div class="meta-item">
+            <div class="meta-icon">
+                <i class="fas fa-gavel"></i>
+            </div>
+            <div class="meta-content">
+                <div class="meta-label">Processo</div>
+                <div class="meta-value">{{ documento.processo.numero_processo }}</div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="meta-item">
+            <div class="meta-icon">
+                <i class="fas fa-calendar"></i>
+            </div>
+            <div class="meta-content">
+                <div class="meta-label">Data Upload</div>
+                <div class="meta-value">{{ documento.data_upload|date:"d/m/Y H:i" }}</div>
+            </div>
+        </div>
+        
+        {% if documento.arquivo %}
+        <div class="meta-item">
+            <div class="meta-icon">
+                <i class="fas fa-file"></i>
+            </div>
+            <div class="meta-content">
+                <div class="meta-label">Tamanho</div>
+                <div class="meta-value">{{ documento.arquivo.size|filesizeformat }}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Descrição -->
+        {% if documento.descricao %}
+        <div class="info-card">
+            <div class="card-header-custom">
+                <h5 class="card-title">
+                    <i class="fas fa-align-left"></i>
+                    Descrição
+                </h5>
+            </div>
+            <div class="card-body-custom">
+                <p class="description-text">{{ documento.descricao|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Tags -->
+        {% if documento.tags.all %}
+        <div class="info-card">
+            <div class="card-header-custom">
+                <h5 class="card-title">
+                    <i class="fas fa-tags"></i>
+                    Tags
+                </h5>
+            </div>
+            <div class="card-body-custom">
+                <div class="tags-container">
+                    {% for tag in documento.tags.all %}
+                        <div class="tag-item">
+                            <i class="fas fa-tag"></i>
+                            {{ tag.nome }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Preview do Arquivo -->
+        {% if documento.arquivo %}
+        <div class="info-card">
+            <div class="card-header-custom">
+                <h5 class="card-title">
+                    <i class="fas fa-eye"></i>
+                    Preview do Arquivo
+                </h5>
+            </div>
+            <div class="card-body-custom">
+                <div class="preview-container">
+                    {% if '.pdf' in documento.arquivo.name|lower %}
+                        <div class="preview-icon">
+                            <i class="fas fa-file-pdf text-danger"></i>
+                        </div>
+                        <div class="preview-text">
+                            Arquivo PDF - {{ documento.arquivo.name }}
+                        </div>
+                        <a href="{{ documento.arquivo.url }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-external-link-alt me-2"></i>Abrir PDF
+                        </a>
+                    {% elif '.jpg' in documento.arquivo.name|lower or '.png' in documento.arquivo.name|lower or '.jpeg' in documento.arquivo.name|lower %}
+                        <img src="{{ documento.arquivo.url }}" alt="{{ documento.nome }}" 
+                             class="img-fluid rounded" style="max-height: 400px;">
+                    {% else %}
+                        <div class="preview-icon">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div class="preview-text">
+                            {{ documento.arquivo.name }}
+                        </div>
+                        <a href="{{ documento.arquivo.url }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-download me-2"></i>Baixar Arquivo
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Informações do Arquivo -->
+        {% if documento.arquivo %}
+        <div class="info-card">
+            <div class="card-header-custom">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle"></i>
+                    Informações do Arquivo
+                </h5>
+            </div>
+            <div class="card-body-custom">
+                <div class="file-info-grid">
+                    <div class="file-info-item">
+                        <div class="file-info-icon">
+                            <i class="fas fa-file-signature"></i>
+                        </div>
+                        <div class="file-info-label">Nome</div>
+                        <div class="file-info-value">{{ documento.arquivo.name|truncatechars:20 }}</div>
+                    </div>
+                    
+                    <div class="file-info-item">
+                        <div class="file-info-icon">
+                            <i class="fas fa-weight-hanging"></i>
+                        </div>
+                        <div class="file-info-label">Tamanho</div>
+                        <div class="file-info-value">{{ documento.arquivo.size|filesizeformat }}</div>
+                    </div>
+                    
+                    <div class="file-info-item">
+                        <div class="file-info-icon">
+                            <i class="fas fa-file-code"></i>
+                        </div>
+                        <div class="file-info-label">Tipo</div>
+                        <div class="file-info-value">
+                            {% if '.pdf' in documento.arquivo.name|lower %}
+                                PDF
+                            {% elif '.doc' in documento.arquivo.name|lower %}
+                                DOC
+                            {% elif '.docx' in documento.arquivo.name|lower %}
+                                DOCX
+                            {% elif '.jpg' in documento.arquivo.name|lower %}
+                                JPG
+                            {% elif '.png' in documento.arquivo.name|lower %}
+                                PNG
+                            {% else %}
+                                {{ documento.arquivo.name|slice:"-3:" }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="file-info-item">
+                        <div class="file-info-icon">
+                            <i class="fas fa-calendar-plus"></i>
+                        </div>
+                        <div class="file-info-label">Upload</div>
+                        <div class="file-info-value">{{ documento.data_upload|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Itens Relacionados -->
+        {% if documento.cliente or documento.processo %}
+        <div class="related-items">
+            <div class="card-header-custom">
+                <h5 class="card-title">
+                    <i class="fas fa-link"></i>
+                    Itens Relacionados
+                </h5>
+            </div>
+            
+            {% if documento.cliente %}
+            <a href="{% url 'clientes:cliente_detail' documento.cliente.pk %}" class="related-item text-decoration-none">
+                <div class="related-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="related-content">
+                    <div class="related-title">{{ documento.cliente.nome }}</div>
+                    <div class="related-subtitle">Cliente</div>
+                </div>
+                <i class="fas fa-chevron-right text-muted"></i>
+            </a>
+            {% endif %}
+            
+            {% if documento.processo %}
+            <a href="{% url 'processos:processo_detail' documento.processo.pk %}" class="related-item text-decoration-none">
+                <div class="related-icon">
+                    <i class="fas fa-gavel"></i>
+                </div>
+                <div class="related-content">
+                    <div class="related-title">{{ documento.processo.numero_processo }}</div>
+                    <div class="related-subtitle">{{ documento.processo.assunto|truncatechars:30 }}</div>
+                </div>
+                <i class="fas fa-chevron-right text-muted"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Histórico de Versões (Placeholder) -->
+        <div class="version-history">
+            <div class="card-header-custom">
+                <h5 class="card-title">
+                    <i class="fas fa-history"></i>
+                    Histórico
+                </h5>
+            </div>
+            
+            <div class="version-item">
+                <div class="version-number">1</div>
+                <div class="version-info">
+                    <div class="version-date">{{ documento.data_upload|date:"d/m/Y H:i" }}</div>
+                    <div class="version-user">Upload inicial</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botões de Ação -->
+<div class="action-buttons">
+    <a href="{% url 'documentos:documento_list' %}" class="btn btn-action btn-back">
+        <i class="fas fa-arrow-left"></i>
+        Voltar à Lista
+    </a>
+    
+    {% if documento.arquivo %}
+    <a href="{{ documento.arquivo.url }}" class="btn btn-action btn-download" target="_blank">
+        <i class="fas fa-download"></i>
+        Download
+    </a>
+    {% endif %}
+    
+    <a href="{% url 'documentos:documento_update' documento.pk %}" class="btn btn-action btn-edit">
+        <i class="fas fa-edit"></i>
+        Editar
+    </a>
+    
+    <a href="{% url 'documentos:documento_delete' documento.pk %}" class="btn btn-action btn-delete" 
+       onclick="return confirm('Tem certeza que deseja excluir este documento?')">
+        <i class="fas fa-trash"></i>
+        Excluir
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmação de exclusão
+    const deleteBtn = document.querySelector('.btn-delete');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const documentName = '{{ documento.nome }}';
+            
+            if (confirm(`Tem certeza que deseja excluir o documento "${documentName}"?\n\nEsta ação não pode ser desfeita.`)) {
+                window.location.href = this.href;
+            }
+        });
+    }
+    
+    // Animação de hover nos botões
+    const actionButtons = document.querySelectorAll('.btn-action');
+    actionButtons.forEach(function(button) {
+        button.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Animação de hover nos itens relacionados
+    const relatedItems = document.querySelectorAll('.related-item');
+    relatedItems.forEach(function(item) {
+        item.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f8f9fa';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = 'transparent';
+        });
+    });
+    
+    // Animação de hover nas tags
+    const tags = document.querySelectorAll('.tag-item');
+    tags.forEach(function(tag) {
+        tag.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-1px)';
+        });
+        
+        tag.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Lazy loading para imagens grandes
+    const images = document.querySelectorAll('img');
+    images.forEach(function(img) {
+        img.addEventListener('load', function() {
+            this.style.opacity = '1';
+        });
+        
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.3s ease';
+    });
+    
+    // Tooltip para arquivos grandes
+    const fileSize = '{{ documento.arquivo.size|default:0 }}';
+    if (parseInt(fileSize) > 10485760) { // 10MB
+        const downloadBtn = document.querySelector('.btn-download');
+        if (downloadBtn) {
+            downloadBtn.title = 'Arquivo grande - pode demorar para fazer download';
+        }
+    }
+});
+</script>
+{% endblock %}

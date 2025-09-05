@@ -1,0 +1,681 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{% if form.instance.pk %}Editar Processo{% else %}Novo Processo{% endif %} - Sistema de Gestão Jurídica
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .form-section-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        margin: 0;
+    }
+    
+    .form-section-title {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+    
+    .form-section-body {
+        padding: 2rem;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .required-field::after {
+        content: ' *';
+        color: #dc3545;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        color: white;
+    }
+    
+    .btn-cancel {
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+    }
+    
+    .priority-selector {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .priority-option {
+        flex: 1;
+        text-align: center;
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .priority-option:hover {
+        border-color: #007bff;
+        transform: translateY(-2px);
+    }
+    
+    .priority-option.selected {
+        border-color: #007bff;
+        background: #f8f9ff;
+    }
+    
+    .priority-option input[type="radio"] {
+        display: none;
+    }
+    
+    .priority-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .priority-alta .priority-icon { color: #dc3545; }
+    .priority-media .priority-icon { color: #ffc107; }
+    .priority-baixa .priority-icon { color: #28a745; }
+    
+    .status-selector {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .status-option {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .status-option:hover {
+        border-color: #007bff;
+        transform: translateY(-2px);
+    }
+    
+    .status-option.selected {
+        border-color: #007bff;
+        background: #f8f9ff;
+    }
+    
+    .status-option input[type="radio"] {
+        display: none;
+    }
+    
+    .status-icon {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .help-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    .form-floating {
+        position: relative;
+    }
+    
+    .form-floating > .form-control {
+        height: calc(3.5rem + 2px);
+        padding: 1rem 0.75rem;
+    }
+    
+    .form-floating > label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        padding: 1rem 0.75rem;
+        pointer-events: none;
+        border: 1px solid transparent;
+        transform-origin: 0 0;
+        transition: opacity .1s ease-in-out,transform .1s ease-in-out;
+    }
+    
+    .character-counter {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-align: right;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'processos:processo_list' %}">
+                <i class="fas fa-gavel me-1"></i>Processos
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            {% if form.instance.pk %}Editar{% else %}Novo{% endif %}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+{% if form.instance.pk %}
+    Editar Processo
+    <small class="text-muted ms-2">{{ form.instance.numero_processo }}</small>
+{% else %}
+    Novo Processo
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" id="processoForm">
+    {% csrf_token %}
+    
+    <!-- Informações Básicas -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <h4 class="form-section-title">
+                <i class="fas fa-info-circle me-2"></i>Informações Básicas
+            </h4>
+        </div>
+        <div class="form-section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.numero_processo.id_for_label }}" class="form-label required-field">
+                            Número do Processo
+                        </label>
+                        {{ form.numero_processo }}
+                        {% if form.numero_processo.errors %}
+                            <div class="error-message">{{ form.numero_processo.errors.0 }}</div>
+                        {% endif %}
+                        <div class="help-text">Formato: 0000000-00.0000.0.00.0000</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.cliente.id_for_label }}" class="form-label required-field">
+                            Cliente
+                        </label>
+                        {{ form.cliente }}
+                        {% if form.cliente.errors %}
+                            <div class="error-message">{{ form.cliente.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label for="{{ form.assunto.id_for_label }}" class="form-label required-field">
+                            Assunto
+                        </label>
+                        {{ form.assunto }}
+                        {% if form.assunto.errors %}
+                            <div class="error-message">{{ form.assunto.errors.0 }}</div>
+                        {% endif %}
+                        <div class="character-counter">
+                            <span id="assunto-counter">0</span>/200 caracteres
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label for="{{ form.descricao.id_for_label }}" class="form-label">
+                            Descrição
+                        </label>
+                        {{ form.descricao }}
+                        {% if form.descricao.errors %}
+                            <div class="error-message">{{ form.descricao.errors.0 }}</div>
+                        {% endif %}
+                        <div class="character-counter">
+                            <span id="descricao-counter">0</span>/1000 caracteres
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Status e Prioridade -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <h4 class="form-section-title">
+                <i class="fas fa-flag me-2"></i>Status e Prioridade
+            </h4>
+        </div>
+        <div class="form-section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label required-field">Status</label>
+                        <div class="status-selector">
+                            <div class="status-option" data-value="ativo">
+                                <input type="radio" name="status" value="ativo" id="status_ativo" 
+                                       {% if form.status.value == 'ativo' or not form.status.value %}checked{% endif %}>
+                                <div class="status-icon text-success">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                                <div class="fw-bold">Ativo</div>
+                                <small class="text-muted">Em andamento</small>
+                            </div>
+                            <div class="status-option" data-value="suspenso">
+                                <input type="radio" name="status" value="suspenso" id="status_suspenso"
+                                       {% if form.status.value == 'suspenso' %}checked{% endif %}>
+                                <div class="status-icon text-warning">
+                                    <i class="fas fa-pause"></i>
+                                </div>
+                                <div class="fw-bold">Suspenso</div>
+                                <small class="text-muted">Temporariamente parado</small>
+                            </div>
+                            <div class="status-option" data-value="finalizado">
+                                <input type="radio" name="status" value="finalizado" id="status_finalizado"
+                                       {% if form.status.value == 'finalizado' %}checked{% endif %}>
+                                <div class="status-icon text-info">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="fw-bold">Finalizado</div>
+                                <small class="text-muted">Concluído</small>
+                            </div>
+                            <div class="status-option" data-value="arquivado">
+                                <input type="radio" name="status" value="arquivado" id="status_arquivado"
+                                       {% if form.status.value == 'arquivado' %}checked{% endif %}>
+                                <div class="status-icon text-secondary">
+                                    <i class="fas fa-archive"></i>
+                                </div>
+                                <div class="fw-bold">Arquivado</div>
+                                <small class="text-muted">Guardado</small>
+                            </div>
+                        </div>
+                        {% if form.status.errors %}
+                            <div class="error-message">{{ form.status.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label required-field">Prioridade</label>
+                        <div class="priority-selector">
+                            <div class="priority-option priority-alta" data-value="alta">
+                                <input type="radio" name="prioridade" value="alta" id="prioridade_alta"
+                                       {% if form.prioridade.value == 'alta' %}checked{% endif %}>
+                                <div class="priority-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="fw-bold">Alta</div>
+                                <small class="text-muted">Urgente</small>
+                            </div>
+                            <div class="priority-option priority-media" data-value="media">
+                                <input type="radio" name="prioridade" value="media" id="prioridade_media"
+                                       {% if form.prioridade.value == 'media' or not form.prioridade.value %}checked{% endif %}>
+                                <div class="priority-icon">
+                                    <i class="fas fa-minus-circle"></i>
+                                </div>
+                                <div class="fw-bold">Média</div>
+                                <small class="text-muted">Normal</small>
+                            </div>
+                            <div class="priority-option priority-baixa" data-value="baixa">
+                                <input type="radio" name="prioridade" value="baixa" id="prioridade_baixa"
+                                       {% if form.prioridade.value == 'baixa' %}checked{% endif %}>
+                                <div class="priority-icon">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
+                                <div class="fw-bold">Baixa</div>
+                                <small class="text-muted">Sem pressa</small>
+                            </div>
+                        </div>
+                        {% if form.prioridade.errors %}
+                            <div class="error-message">{{ form.prioridade.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informações do Tribunal -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <h4 class="form-section-title">
+                <i class="fas fa-building me-2"></i>Informações do Tribunal
+            </h4>
+        </div>
+        <div class="form-section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.tribunal.id_for_label }}" class="form-label">
+                            Tribunal
+                        </label>
+                        {{ form.tribunal }}
+                        {% if form.tribunal.errors %}
+                            <div class="error-message">{{ form.tribunal.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.vara.id_for_label }}" class="form-label">
+                            Vara
+                        </label>
+                        {{ form.vara }}
+                        {% if form.vara.errors %}
+                            <div class="error-message">{{ form.vara.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.juiz.id_for_label }}" class="form-label">
+                            Juiz
+                        </label>
+                        {{ form.juiz }}
+                        {% if form.juiz.errors %}
+                            <div class="error-message">{{ form.juiz.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.data_distribuicao.id_for_label }}" class="form-label">
+                            Data de Distribuição
+                        </label>
+                        {{ form.data_distribuicao }}
+                        {% if form.data_distribuicao.errors %}
+                            <div class="error-message">{{ form.data_distribuicao.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informações Adicionais -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <h4 class="form-section-title">
+                <i class="fas fa-plus-circle me-2"></i>Informações Adicionais
+            </h4>
+        </div>
+        <div class="form-section-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.area_direito.id_for_label }}" class="form-label">
+                            Área do Direito
+                        </label>
+                        {{ form.area_direito }}
+                        {% if form.area_direito.errors %}
+                            <div class="error-message">{{ form.area_direito.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">
+                            Tipo de Ação
+                        </label>
+                        {{ form.tipo_acao }}
+                        {% if form.tipo_acao.errors %}
+                            <div class="error-message">{{ form.tipo_acao.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.valor_causa.id_for_label }}" class="form-label">
+                            Valor da Causa
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            {{ form.valor_causa }}
+                        </div>
+                        {% if form.valor_causa.errors %}
+                            <div class="error-message">{{ form.valor_causa.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                            Observações
+                        </label>
+                        {{ form.observacoes }}
+                        {% if form.observacoes.errors %}
+                            <div class="error-message">{{ form.observacoes.errors.0 }}</div>
+                        {% endif %}
+                        <div class="character-counter">
+                            <span id="observacoes-counter">0</span>/500 caracteres
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botões de Ação -->
+    <div class="form-section">
+        <div class="form-section-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{% url 'processos:processo_list' %}" class="btn btn-outline-secondary btn-cancel">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </a>
+                
+                <div class="d-flex gap-2">
+                    {% if form.instance.pk %}
+                        <a href="{% url 'processos:processo_detail' form.instance.pk %}" class="btn btn-outline-info">
+                            <i class="fas fa-eye me-2"></i>Visualizar
+                        </a>
+                    {% endif %}
+                    <button type="submit" class="btn btn-save" id="submitBtn">
+                        <i class="fas fa-save me-2"></i>
+                        {% if form.instance.pk %}Atualizar Processo{% else %}Salvar Processo{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Seletores de prioridade e status
+    const priorityOptions = document.querySelectorAll('.priority-option');
+    const statusOptions = document.querySelectorAll('.status-option');
+    
+    // Função para atualizar seleção visual
+    function updateSelection(options, selectedValue) {
+        options.forEach(option => {
+            const input = option.querySelector('input[type="radio"]');
+            if (input.value === selectedValue) {
+                option.classList.add('selected');
+                input.checked = true;
+            } else {
+                option.classList.remove('selected');
+            }
+        });
+    }
+    
+    // Inicializar seleções visuais
+    const selectedPriority = document.querySelector('input[name="prioridade"]:checked');
+    if (selectedPriority) {
+        updateSelection(priorityOptions, selectedPriority.value);
+    }
+    
+    const selectedStatus = document.querySelector('input[name="status"]:checked');
+    if (selectedStatus) {
+        updateSelection(statusOptions, selectedStatus.value);
+    }
+    
+    // Event listeners para prioridade
+    priorityOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            updateSelection(priorityOptions, value);
+        });
+    });
+    
+    // Event listeners para status
+    statusOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            updateSelection(statusOptions, value);
+        });
+    });
+    
+    // Contadores de caracteres
+    function setupCharacterCounter(fieldId, counterId, maxLength) {
+        const field = document.getElementById(fieldId);
+        const counter = document.getElementById(counterId);
+        
+        if (field && counter) {
+            function updateCounter() {
+                const currentLength = field.value.length;
+                counter.textContent = currentLength;
+                
+                if (currentLength > maxLength * 0.9) {
+                    counter.style.color = '#dc3545';
+                } else if (currentLength > maxLength * 0.7) {
+                    counter.style.color = '#ffc107';
+                } else {
+                    counter.style.color = '#6c757d';
+                }
+            }
+            
+            updateCounter();
+            field.addEventListener('input', updateCounter);
+        }
+    }
+    
+    setupCharacterCounter('id_assunto', 'assunto-counter', 200);
+    setupCharacterCounter('id_descricao', 'descricao-counter', 1000);
+    setupCharacterCounter('id_observacoes', 'observacoes-counter', 500);
+    
+    // Máscara para número do processo
+    const numeroProcessoField = document.getElementById('id_numero_processo');
+    if (numeroProcessoField) {
+        numeroProcessoField.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length > 0) {
+                value = value.replace(/(\d{7})(\d{2})(\d{4})(\d{1})(\d{2})(\d{4})/, '$1-$2.$3.$4.$5.$6');
+            }
+            
+            e.target.value = value;
+        });
+    }
+    
+    // Máscara para valor da causa
+    const valorCausaField = document.getElementById('id_valor_causa');
+    if (valorCausaField) {
+        valorCausaField.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = (value / 100).toFixed(2);
+            value = value.replace('.', ',');
+            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            e.target.value = value;
+        });
+    }
+    
+    // Validação do formulário
+    const form = document.getElementById('processoForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    form.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
+        
+        // Reabilitar o botão após 5 segundos para evitar travamento
+        setTimeout(function() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>{% if form.instance.pk %}Atualizar Processo{% else %}Salvar Processo{% endif %}';
+        }, 5000);
+    });
+    
+    // Auto-save (opcional)
+    let autoSaveTimeout;
+    const formFields = form.querySelectorAll('input, select, textarea');
+    
+    formFields.forEach(field => {
+        field.addEventListener('change', function() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(function() {
+                // Implementar auto-save aqui se necessário
+                console.log('Auto-save triggered');
+            }, 30000); // 30 segundos
+        });
+    });
+});
+</script>
+{% endblock %}

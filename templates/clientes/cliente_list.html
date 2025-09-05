@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Clientes - Sistema de Gestão Jurídica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .client-card {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .client-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    
+    .client-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .search-box {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .search-box:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="fas fa-users me-1"></i>Clientes
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+Clientes
+<div class="d-flex align-items-center ms-auto">
+    <span class="badge bg-primary me-3">{{ object_list.count }} cliente{{ object_list.count|pluralize }}</span>
+    <a href="{% url 'clientes:cliente_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Novo Cliente
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filtros -->
+<div class="filter-card">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="nome" class="form-label">Nome</label>
+                <input type="text" class="form-control search-box" id="nome" name="nome" 
+                       value="{{ request.GET.nome }}" placeholder="Buscar por nome...">
+            </div>
+            <div class="col-md-3">
+                <label for="cpf_cnpj" class="form-label">CPF/CNPJ</label>
+                <input type="text" class="form-control" id="cpf_cnpj" name="cpf_cnpj" 
+                       value="{{ request.GET.cpf_cnpj }}" placeholder="000.000.000-00" data-mask="document">
+            </div>
+            <div class="col-md-2">
+                <label for="tipo" class="form-label">Tipo</label>
+                <select class="form-select" id="tipo" name="tipo">
+                    <option value="">Todos</option>
+                    <option value="PF" {% if request.GET.tipo == 'PF' %}selected{% endif %}>Pessoa Física</option>
+                    <option value="PJ" {% if request.GET.tipo == 'PJ' %}selected{% endif %}>Pessoa Jurídica</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Todos</option>
+                    <option value="True" {% if request.GET.status == 'True' %}selected{% endif %}>Ativo</option>
+                    <option value="False" {% if request.GET.status == 'False' %}selected{% endif %}>Inativo</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Clientes -->
+<div class="row">
+    {% for cliente in object_list %}
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="card client-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="client-avatar me-3">
+                        {{ cliente.nome|first|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-1">
+                            <a href="{% url 'clientes:cliente_detail' cliente.pk %}" class="text-decoration-none">
+                                {{ cliente.nome }}
+                            </a>
+                        </h5>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-id-card me-1"></i>
+                            {{ cliente.cpf_cnpj }}
+                        </p>
+                        <div class="d-flex align-items-center">
+                            {% if cliente.ativo %}
+                                <span class="badge bg-success status-badge me-2">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-secondary status-badge me-2">Inativo</span>
+                            {% endif %}
+                            <span class="badge bg-info status-badge">
+                                {{ cliente.get_tipo_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'clientes:cliente_detail' cliente.pk %}">
+                                    <i class="fas fa-eye me-2"></i>Visualizar
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'clientes:cliente_update' cliente.pk %}">
+                                    <i class="fas fa-edit me-2"></i>Editar
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'clientes:cliente_delete' cliente.pk %}" 
+                                   data-confirm-delete="Tem certeza que deseja excluir o cliente {{ cliente.nome }}?">
+                                    <i class="fas fa-trash me-2"></i>Excluir
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="row text-center border-top pt-3">
+                    <div class="col-4">
+                        <div class="text-muted small">Processos</div>
+                        <div class="fw-bold text-primary">{{ cliente.processos.count }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small">Documentos</div>
+                        <div class="fw-bold text-success">{{ cliente.documentos.count }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small">Compromissos</div>
+                        <div class="fw-bold text-info">{{ cliente.compromissos.count }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-light">
+                <div class="d-flex align-items-center justify-content-between">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        Cadastrado em {{ cliente.data_cadastro|date:"d/m/Y" }}
+                    </small>
+                    {% if cliente.email %}
+                        <a href="mailto:{{ cliente.email }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    {% endif %}
+                    {% if cliente.telefone %}
+                        <a href="tel:{{ cliente.telefone }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-users fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">Nenhum cliente encontrado</h4>
+                <p class="text-muted mb-4">
+                    {% if request.GET.nome or request.GET.cpf_cnpj or request.GET.tipo or request.GET.status %}
+                        Nenhum cliente corresponde aos filtros aplicados.
+                    {% else %}
+                        Você ainda não cadastrou nenhum cliente.
+                    {% endif %}
+                </p>
+                <a href="{% url 'clientes:cliente_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Cadastrar Primeiro Cliente
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Paginação -->
+{% if is_paginated %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Navegação de páginas">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
+<div class="text-center text-muted mt-3">
+    Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} cliente{{ page_obj.paginator.count|pluralize }}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Busca em tempo real
+const searchInput = document.getElementById('nome');
+if (searchInput) {
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() {
+            if (searchInput.value.length >= 2 || searchInput.value.length === 0) {
+                searchInput.form.submit();
+            }
+        }, 500);
+    });
+}
+
+// Aplicar máscaras
+document.addEventListener('DOMContentLoaded', function() {
+    // Máscara para CPF/CNPJ
+    const cpfCnpjInput = document.getElementById('cpf_cnpj');
+    if (cpfCnpjInput) {
+        cpfCnpjInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                // CPF
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            } else {
+                // CNPJ
+                value = value.replace(/(\d{2})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1/$2');
+                value = value.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+            }
+            e.target.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}

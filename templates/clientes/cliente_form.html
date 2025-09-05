@@ -1,0 +1,526 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{% if object %}
+    Editar Cliente - {{ object.nome }}
+{% else %}
+    Novo Cliente
+{% endif %}
+ - Sistema de Gestão Jurídica
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .section-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .section-body {
+        padding: 1.5rem;
+    }
+    
+    .form-floating {
+        margin-bottom: 1rem;
+    }
+    
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        opacity: .65;
+        transform: scale(.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .required-field::after {
+        content: ' *';
+        color: #dc3545;
+    }
+    
+    .help-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    .tipo-toggle {
+        display: flex;
+        background: #f8f9fa;
+        border-radius: 25px;
+        padding: 0.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    .tipo-option {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        border: none;
+        background: transparent;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .tipo-option.active {
+        background: #007bff;
+        color: white;
+        box-shadow: 0 2px 5px rgba(0,123,255,0.3);
+    }
+    
+    .cep-loading {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'clientes:cliente_list' %}">
+                <i class="fas fa-users me-1"></i>Clientes
+            </a>
+        </li>
+        {% if object %}
+        <li class="breadcrumb-item">
+            <a href="{% url 'clientes:cliente_detail' object.pk %}">
+                {{ object.nome }}
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            Editar
+        </li>
+        {% else %}
+        <li class="breadcrumb-item active" aria-current="page">
+            Novo Cliente
+        </li>
+        {% endif %}
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+{% if object %}
+    <i class="fas fa-edit me-2"></i>Editar Cliente
+{% else %}
+    <i class="fas fa-user-plus me-2"></i>Novo Cliente
+{% endif %}
+<div class="d-flex align-items-center ms-auto">
+    <a href="{% if object %}{% url 'clientes:cliente_detail' object.pk %}{% else %}{% url 'clientes:cliente_list' %}{% endif %}" 
+       class="btn btn-outline-secondary me-2">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<form method="post" id="clienteForm" novalidate>
+    {% csrf_token %}
+    
+    <!-- Informações Básicas -->
+    <div class="form-section">
+        <h5 class="section-header">
+            <i class="fas fa-user me-2"></i>Informações Básicas
+        </h5>
+        <div class="section-body">
+            <!-- Tipo de Pessoa -->
+            <div class="mb-3">
+                <label class="form-label required-field">Tipo de Pessoa</label>
+                <div class="tipo-toggle">
+                    <button type="button" class="tipo-option" data-tipo="PF" 
+                            {% if not object or object.tipo == 'PF' %}active{% endif %}>
+                        <i class="fas fa-user me-2"></i>Pessoa Física
+                    </button>
+                    <button type="button" class="tipo-option" data-tipo="PJ" 
+                            {% if object and object.tipo == 'PJ' %}active{% endif %}>
+                        <i class="fas fa-building me-2"></i>Pessoa Jurídica
+                    </button>
+                </div>
+                {{ form.tipo.as_hidden }}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-floating">
+                        {{ form.nome }}
+                        <label for="{{ form.nome.id_for_label }}" class="required-field">Nome Completo</label>
+                        {% if form.nome.errors %}
+                            <div class="error-message">{{ form.nome.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        {{ form.cpf_cnpj }}
+                        <label for="{{ form.cpf_cnpj.id_for_label }}" class="required-field" id="cpf-cnpj-label">
+                            CPF
+                        </label>
+                        {% if form.cpf_cnpj.errors %}
+                            <div class="error-message">{{ form.cpf_cnpj.errors.0 }}</div>
+                        {% endif %}
+                        <div class="help-text" id="cpf-cnpj-help">Formato: 000.000.000-00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form.email }}
+                        <label for="{{ form.email.id_for_label }}">E-mail</label>
+                        {% if form.email.errors %}
+                            <div class="error-message">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form.telefone }}
+                        <label for="{{ form.telefone.id_for_label }}">Telefone</label>
+                        {% if form.telefone.errors %}
+                            <div class="error-message">{{ form.telefone.errors.0 }}</div>
+                        {% endif %}
+                        <div class="help-text">Formato: (00) 00000-0000</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informações Pessoais (apenas para PF) -->
+    <div class="form-section" id="pessoa-fisica-section" 
+         {% if object and object.tipo == 'PJ' %}style="display: none;"{% endif %}>
+        <h5 class="section-header">
+            <i class="fas fa-id-card me-2"></i>Informações Pessoais
+        </h5>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        {{ form.rg }}
+                        <label for="{{ form.rg.id_for_label }}">RG</label>
+                        {% if form.rg.errors %}
+                            <div class="error-message">{{ form.rg.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        {{ form.data_nascimento }}
+                        <label for="{{ form.data_nascimento.id_for_label }}">Data de Nascimento</label>
+                        {% if form.data_nascimento.errors %}
+                            <div class="error-message">{{ form.data_nascimento.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        {{ form.estado_civil }}
+                        <label for="{{ form.estado_civil.id_for_label }}">Estado Civil</label>
+                        {% if form.estado_civil.errors %}
+                            <div class="error-message">{{ form.estado_civil.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form.profissao }}
+                        <label for="{{ form.profissao.id_for_label }}">Profissão</label>
+                        {% if form.profissao.errors %}
+                            <div class="error-message">{{ form.profissao.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form.nacionalidade }}
+                        <label for="{{ form.nacionalidade.id_for_label }}">Nacionalidade</label>
+                        {% if form.nacionalidade.errors %}
+                            <div class="error-message">{{ form.nacionalidade.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Endereço -->
+    <div class="form-section">
+        <h5 class="section-header">
+            <i class="fas fa-map-marker-alt me-2"></i>Endereço
+        </h5>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-floating position-relative">
+                        {{ form.cep }}
+                        <label for="{{ form.cep.id_for_label }}">CEP</label>
+                        <div class="cep-loading">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                        {% if form.cep.errors %}
+                            <div class="error-message">{{ form.cep.errors.0 }}</div>
+                        {% endif %}
+                        <div class="help-text">Formato: 00000-000</div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="form-floating">
+                        {{ form.endereco }}
+                        <label for="{{ form.endereco.id_for_label }}">Logradouro</label>
+                        {% if form.endereco.errors %}
+                            <div class="error-message">{{ form.endereco.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-floating">
+                        {{ form.cidade }}
+                        <label for="{{ form.cidade.id_for_label }}">Cidade</label>
+                        {% if form.cidade.errors %}
+                            <div class="error-message">{{ form.cidade.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        {{ form.estado }}
+                        <label for="{{ form.estado.id_for_label }}">Estado</label>
+                        {% if form.estado.errors %}
+                            <div class="error-message">{{ form.estado.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Observações -->
+    <div class="form-section">
+        <h5 class="section-header">
+            <i class="fas fa-sticky-note me-2"></i>Observações
+        </h5>
+        <div class="section-body">
+            <div class="form-floating">
+                {{ form.observacoes }}
+                <label for="{{ form.observacoes.id_for_label }}">Observações</label>
+                {% if form.observacoes.errors %}
+                    <div class="error-message">{{ form.observacoes.errors.0 }}</div>
+                {% endif %}
+                <div class="help-text">Informações adicionais sobre o cliente</div>
+            </div>
+            
+            <div class="form-check mt-3">
+                {{ form.ativo }}
+                <label class="form-check-label" for="{{ form.ativo.id_for_label }}">
+                    Cliente ativo
+                </label>
+                {% if form.ativo.errors %}
+                    <div class="error-message">{{ form.ativo.errors.0 }}</div>
+                {% endif %}
+                <div class="help-text">Clientes inativos não aparecem nas listagens principais</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botões de Ação -->
+    <div class="d-flex justify-content-end gap-3 mb-4">
+        <a href="{% if object %}{% url 'clientes:cliente_detail' object.pk %}{% else %}{% url 'clientes:cliente_list' %}{% endif %}" 
+           class="btn btn-outline-secondary btn-lg">
+            <i class="fas fa-times me-2"></i>Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary btn-save btn-lg">
+            <i class="fas fa-save me-2"></i>
+            {% if object %}Atualizar Cliente{% else %}Cadastrar Cliente{% endif %}
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('clienteForm');
+    const tipoField = document.getElementById('{{ form.tipo.id_for_label }}');
+    const tipoOptions = document.querySelectorAll('.tipo-option');
+    const pessoaFisicaSection = document.getElementById('pessoa-fisica-section');
+    const cpfCnpjField = document.getElementById('{{ form.cpf_cnpj.id_for_label }}');
+    const cpfCnpjLabel = document.getElementById('cpf-cnpj-label');
+    const cpfCnpjHelp = document.getElementById('cpf-cnpj-help');
+    const cepField = document.getElementById('{{ form.cep.id_for_label }}');
+    const cepLoading = document.querySelector('.cep-loading');
+    
+    // Toggle tipo de pessoa
+    tipoOptions.forEach(function(option) {
+        option.addEventListener('click', function() {
+            const tipo = this.getAttribute('data-tipo');
+            
+            // Atualizar visual
+            tipoOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Atualizar campo hidden
+            tipoField.value = tipo;
+            
+            // Mostrar/ocultar seção pessoa física
+            if (tipo === 'PF') {
+                pessoaFisicaSection.style.display = 'block';
+                cpfCnpjLabel.textContent = 'CPF';
+                cpfCnpjHelp.textContent = 'Formato: 000.000.000-00';
+            } else {
+                pessoaFisicaSection.style.display = 'none';
+                cpfCnpjLabel.textContent = 'CNPJ';
+                cpfCnpjHelp.textContent = 'Formato: 00.000.000/0000-00';
+            }
+            
+            // Limpar e reaplicar máscara
+            cpfCnpjField.value = '';
+            aplicarMascaraCpfCnpj();
+        });
+    });
+    
+    // Máscara CPF/CNPJ
+    function aplicarMascaraCpfCnpj() {
+        cpfCnpjField.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            const tipo = tipoField.value;
+            
+            if (tipo === 'PF') {
+                // CPF
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            } else {
+                // CNPJ
+                value = value.replace(/(\d{2})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1/$2');
+                value = value.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+            }
+            
+            e.target.value = value;
+        });
+    }
+    
+    // Máscara telefone
+    const telefoneField = document.getElementById('{{ form.telefone.id_for_label }}');
+    if (telefoneField) {
+        telefoneField.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/(\d{2})(\d)/, '($1) $2');
+            value = value.replace(/(\d{5})(\d)/, '$1-$2');
+            e.target.value = value;
+        });
+    }
+    
+    // Máscara CEP
+    if (cepField) {
+        cepField.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/(\d{5})(\d)/, '$1-$2');
+            e.target.value = value;
+        });
+        
+        // Buscar endereço por CEP
+        cepField.addEventListener('blur', function() {
+            const cep = this.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                buscarEnderecoPorCep(cep);
+            }
+        });
+    }
+    
+    // Função para buscar endereço por CEP
+    function buscarEnderecoPorCep(cep) {
+        cepLoading.style.display = 'block';
+        
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.erro) {
+                    document.getElementById('{{ form.endereco.id_for_label }}').value = data.logradouro;
+                    document.getElementById('{{ form.cidade.id_for_label }}').value = data.localidade;
+                    document.getElementById('{{ form.estado.id_for_label }}').value = data.uf;
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar CEP:', error);
+            })
+            .finally(() => {
+                cepLoading.style.display = 'none';
+            });
+    }
+    
+    // Validação do formulário
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        const requiredFields = form.querySelectorAll('[required]');
+        
+        requiredFields.forEach(function(field) {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('is-invalid');
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
+        }
+    });
+    
+    // Inicializar máscaras
+    aplicarMascaraCpfCnpj();
+});
+</script>
+{% endblock %}

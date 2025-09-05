@@ -1,0 +1,807 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Excluir Documento - Sistema de Gestão Jurídica
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .delete-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .delete-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .delete-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+    
+    .delete-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .delete-body {
+        padding: 2.5rem;
+    }
+    
+    .document-info {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 5px solid #dc3545;
+    }
+    
+    .document-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .document-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .document-icon.pdf {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+    
+    .document-icon.doc {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    }
+    
+    .document-icon.img {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .document-icon.other {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+    
+    .document-details {
+        flex: 1;
+    }
+    
+    .document-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .document-meta {
+        color: #6c757d;
+        font-size: 0.95rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .document-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        border-color: #dc3545;
+        transform: translateY(-2px);
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin: 0 auto 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .warning-section {
+        background: #fff3cd;
+        border: 2px solid #ffeaa7;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .warning-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .warning-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #ffc107;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+    
+    .warning-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #856404;
+        margin: 0;
+    }
+    
+    .warning-text {
+        color: #856404;
+        line-height: 1.6;
+        margin: 0;
+    }
+    
+    .impact-list {
+        background: #f8d7da;
+        border: 2px solid #f5c6cb;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .impact-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #721c24;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .impact-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: #dc3545;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    
+    .impact-items {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .impact-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+    
+    .impact-item:last-child {
+        border-bottom: none;
+    }
+    
+    .impact-item-icon {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background: #dc3545;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+    
+    .confirmation-section {
+        background: #e2e3e5;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .confirmation-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .confirmation-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: #6c757d;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    
+    .form-check {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 10px;
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    .form-check:hover {
+        border-color: #adb5bd;
+    }
+    
+    .form-check-input:checked + .form-check-label {
+        color: #dc3545;
+        font-weight: 600;
+    }
+    
+    .form-check-label {
+        font-size: 1rem;
+        color: #495057;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .check-icon {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background: #6c757d;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+    
+    .form-actions {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .btn-action {
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .btn-cancel {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+    }
+    
+    .btn-cancel:hover {
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+        color: white;
+    }
+    
+    .btn-report {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+    }
+    
+    .btn-report:hover {
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+        color: white;
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        color: white;
+    }
+    
+    .btn-delete:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .loading-spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+        .delete-body {
+            padding: 1.5rem;
+        }
+        
+        .document-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .document-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .document-meta {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'documentos:documento_list' %}">
+                <i class="fas fa-file-alt me-1"></i>Documentos
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'documentos:documento_detail' documento.pk %}">
+                <i class="fas fa-eye me-1"></i>{{ documento.nome|truncatechars:30 }}
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            Excluir
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+Excluir Documento
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <div class="delete-header">
+        <div class="delete-title">
+            <div class="delete-icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <div>Excluir Documento</div>
+        </div>
+        <p class="delete-subtitle">
+            Esta ação não pode ser desfeita
+        </p>
+    </div>
+    
+    <div class="delete-body">
+        <!-- Informações do Documento -->
+        <div class="document-info">
+            <div class="document-header">
+                <div class="document-icon {% if documento.arquivo %}{% if 'pdf' in documento.arquivo.name|lower %}pdf{% elif 'doc' in documento.arquivo.name|lower %}doc{% elif 'jpg' in documento.arquivo.name|lower or 'png' in documento.arquivo.name|lower %}img{% else %}other{% endif %}{% else %}other{% endif %}">
+                    {% if documento.arquivo %}
+                        {% if 'pdf' in documento.arquivo.name|lower %}
+                            PDF
+                        {% elif 'doc' in documento.arquivo.name|lower %}
+                            DOC
+                        {% elif 'jpg' in documento.arquivo.name|lower or 'png' in documento.arquivo.name|lower %}
+                            IMG
+                        {% else %}
+                            FILE
+                        {% endif %}
+                    {% else %}
+                        FILE
+                    {% endif %}
+                </div>
+                
+                <div class="document-details">
+                    <div class="document-name">{{ documento.nome }}</div>
+                    <div class="document-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-tag"></i>
+                            <span>{{ documento.tipo }}</span>
+                        </div>
+                        {% if documento.cliente %}
+                        <div class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <span>{{ documento.cliente.nome }}</span>
+                        </div>
+                        {% endif %}
+                        {% if documento.processo %}
+                        <div class="meta-item">
+                            <i class="fas fa-gavel"></i>
+                            <span>{{ documento.processo.numero }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ documento.data_upload|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        {% if documento.arquivo %}
+                        <div class="meta-item">
+                            <i class="fas fa-file"></i>
+                            <span>{{ documento.arquivo.size|filesizeformat }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Estatísticas -->
+        <div class="document-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <div class="stat-value">{{ documento.tags.count }}</div>
+                <div class="stat-label">Tags Associadas</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="stat-value">{{ documento.visualizacoes|default:0 }}</div>
+                <div class="stat-label">Visualizações</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-download"></i>
+                </div>
+                <div class="stat-value">{{ documento.downloads|default:0 }}</div>
+                <div class="stat-label">Downloads</div>
+            </div>
+        </div>
+        
+        <!-- Aviso de Impacto -->
+        <div class="warning-section">
+            <div class="warning-header">
+                <div class="warning-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h4 class="warning-title">Atenção: Impacto da Exclusão</h4>
+            </div>
+            <p class="warning-text">
+                A exclusão deste documento é <strong>permanente e irreversível</strong>. 
+                Todos os dados relacionados serão perdidos definitivamente.
+            </p>
+        </div>
+        
+        <!-- Lista de Impactos -->
+        <div class="impact-list">
+            <h4 class="impact-title">
+                <div class="impact-icon">
+                    <i class="fas fa-list"></i>
+                </div>
+                O que será excluído:
+            </h4>
+            
+            <ul class="impact-items">
+                <li class="impact-item">
+                    <div class="impact-item-icon">
+                        <i class="fas fa-file"></i>
+                    </div>
+                    <div>
+                        <strong>Arquivo físico:</strong> O arquivo será removido permanentemente do servidor
+                    </div>
+                </li>
+                
+                <li class="impact-item">
+                    <div class="impact-item-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div>
+                        <strong>Registro no banco:</strong> Todas as informações do documento serão apagadas
+                    </div>
+                </li>
+                
+                <li class="impact-item">
+                    <div class="impact-item-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div>
+                        <strong>Tags associadas:</strong> {{ documento.tags.count }} tag(s) serão desvinculadas
+                    </div>
+                </li>
+                
+                <li class="impact-item">
+                    <div class="impact-item-icon">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <div>
+                        <strong>Relacionamentos:</strong> Vínculos com cliente e processo serão removidos
+                    </div>
+                </li>
+                
+                <li class="impact-item">
+                    <div class="impact-item-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <strong>Histórico:</strong> Dados de visualizações e downloads serão perdidos
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Confirmações -->
+        <div class="confirmation-section">
+            <h4 class="confirmation-title">
+                <div class="confirmation-icon">
+                    <i class="fas fa-check-square"></i>
+                </div>
+                Confirmações Necessárias
+            </h4>
+            
+            <form method="post" id="deleteForm">
+                {% csrf_token %}
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="confirmIrreversible" required>
+                    <label class="form-check-label" for="confirmIrreversible">
+                        <div class="check-icon">
+                            <i class="fas fa-exclamation"></i>
+                        </div>
+                        <div>
+                            Entendo que esta ação é <strong>irreversível</strong> e o documento será 
+                            <strong>permanentemente excluído</strong>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="confirmBackup" required>
+                    <label class="form-check-label" for="confirmBackup">
+                        <div class="check-icon">
+                            <i class="fas fa-save"></i>
+                        </div>
+                        <div>
+                            Confirmo que fiz <strong>backup</strong> do documento se necessário, 
+                            pois não será possível recuperá-lo após a exclusão
+                        </div>
+                    </label>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Botões de Ação -->
+    <div class="form-actions">
+        <a href="{% url 'documentos:documento_detail' documento.pk %}" class="btn btn-action btn-cancel">
+            <i class="fas fa-arrow-left"></i>
+            Cancelar
+        </a>
+        
+        <div class="d-flex gap-2">
+            {% if documento.arquivo %}
+            <a href="{{ documento.arquivo.url }}" class="btn btn-action btn-report" target="_blank">
+                <i class="fas fa-download"></i>
+                Fazer Backup
+            </a>
+            {% endif %}
+            
+            <button type="submit" form="deleteForm" class="btn btn-action btn-delete" id="deleteBtn" disabled>
+                <div class="loading-spinner" id="loadingSpinner"></div>
+                <i class="fas fa-trash-alt" id="deleteIcon"></i>
+                <span id="deleteText">Excluir Permanentemente</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteForm = document.getElementById('deleteForm');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const deleteIcon = document.getElementById('deleteIcon');
+    const deleteText = document.getElementById('deleteText');
+    const checkboxes = deleteForm.querySelectorAll('input[type="checkbox"]');
+    
+    // Gerenciar habilitação do botão de exclusão
+    function updateDeleteButton() {
+        const allChecked = Array.from(checkboxes).every(function(checkbox) {
+            return checkbox.checked;
+        });
+        
+        deleteBtn.disabled = !allChecked;
+        
+        if (allChecked) {
+            deleteBtn.style.opacity = '1';
+            deleteBtn.style.cursor = 'pointer';
+        } else {
+            deleteBtn.style.opacity = '0.6';
+            deleteBtn.style.cursor = 'not-allowed';
+        }
+    }
+    
+    // Adicionar listeners aos checkboxes
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', updateDeleteButton);
+    });
+    
+    // Submissão do formulário
+    deleteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Confirmação final
+        const documentName = '{{ documento.nome|escapejs }}';
+        const confirmMessage = `Tem certeza que deseja excluir permanentemente o documento "${documentName}"?\n\nEsta ação NÃO PODE ser desfeita!`;
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
+        // Mostrar loading
+        deleteBtn.disabled = true;
+        loadingSpinner.style.display = 'block';
+        deleteIcon.style.display = 'none';
+        deleteText.textContent = 'Excluindo...';
+        
+        // Submeter formulário
+        this.submit();
+    });
+    
+    // Aviso ao sair da página
+    let formChanged = false;
+    
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            formChanged = true;
+        });
+    });
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            const message = 'Você tem alterações não salvas. Deseja realmente sair?';
+            e.returnValue = message;
+            return message;
+        }
+    });
+    
+    // Remover aviso após submissão
+    deleteForm.addEventListener('submit', function() {
+        formChanged = false;
+    });
+    
+    // Animações de hover nos cards
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(function(card) {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = 'none';
+        });
+    });
+    
+    // Inicializar estado do botão
+    updateDeleteButton();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,497 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Sistema de Gestão Jurídica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card.success {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .stat-card.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .stat-card.info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    .recent-activity {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        border-left: 3px solid #007bff;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .quick-action-btn {
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: white;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+    
+    .quick-action-btn:hover {
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .quick-action-btn i {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Estatísticas Principais -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-uppercase mb-1">Total de Clientes</h6>
+                    <h2 class="mb-0">{{ stats.total_clientes|default:0 }}</h2>
+                    <small class="text-white-50">
+                        <i class="fas fa-arrow-up me-1"></i>
+                        +{{ stats.novos_clientes_mes|default:0 }} este mês
+                    </small>
+                </div>
+                <div class="ms-3">
+                    <i class="fas fa-users fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card success">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-uppercase mb-1">Processos Ativos</h6>
+                    <h2 class="mb-0">{{ stats.processos_ativos|default:0 }}</h2>
+                    <small class="text-white-50">
+                        <i class="fas fa-gavel me-1"></i>
+                        {{ stats.processos_mes|default:0 }} novos este mês
+                    </small>
+                </div>
+                <div class="ms-3">
+                    <i class="fas fa-balance-scale fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card warning">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-uppercase mb-1">Prazos Vencendo</h6>
+                    <h2 class="mb-0">{{ stats.prazos_vencendo|default:0 }}</h2>
+                    <small class="text-white-50">
+                        <i class="fas fa-clock me-1"></i>
+                        Próximos 7 dias
+                    </small>
+                </div>
+                <div class="ms-3">
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card info">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-uppercase mb-1">Receita do Mês</h6>
+                    <h2 class="mb-0">R$ {{ stats.receita_mes|default:"0,00" }}</h2>
+                    <small class="text-white-50">
+                        <i class="fas fa-chart-line me-1"></i>
+                        {{ stats.percentual_receita|default:"+0" }}% vs mês anterior
+                    </small>
+                </div>
+                <div class="ms-3">
+                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Ações Rápidas -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-primary"></i>
+                    Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6">
+                        <a href="{% url 'clientes:cliente_create' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Novo Cliente</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <a href="{% url 'processos:processo_create' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Novo Processo</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <a href="#" class="quick-action-btn" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>Agendar</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <a href="{% url 'documentos:documento_create' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="fas fa-file-upload"></i>
+                            <span>Upload Doc</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Compromissos de Hoje -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-day me-2 text-success"></i>
+                    Hoje
+                </h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">
+                    Ver Todos
+                </a>
+            </div>
+            <div class="card-body">
+                {% if compromissos_hoje %}
+                    {% for compromisso in compromissos_hoje %}
+                    <div class="d-flex align-items-center mb-3 p-2 bg-light rounded">
+                        <div class="me-3">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ compromisso.titulo }}</h6>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ compromisso.data_hora|date:"H:i" }}
+                                {% if compromisso.cliente %}
+                                    | {{ compromisso.cliente.nome }}
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-calendar-check fa-3x mb-3 opacity-50"></i>
+                        <p>Nenhum compromisso para hoje</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Gráfico de Processos -->
+    <div class="col-lg-8 mb-4">
+        <div class="chart-container">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2 text-primary"></i>
+                    Processos por Status
+                </h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="chart-period" id="chart-month" checked>
+                    <label class="btn btn-outline-primary" for="chart-month">Mês</label>
+                    
+                    <input type="radio" class="btn-check" name="chart-period" id="chart-year">
+                    <label class="btn btn-outline-primary" for="chart-year">Ano</label>
+                </div>
+            </div>
+            <canvas id="processosChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+    
+    <!-- Atividades Recentes -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2 text-info"></i>
+                    Atividades Recentes
+                </h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">
+                    Ver Todas
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="recent-activity">
+                    {% if atividades_recentes %}
+                        {% for atividade in atividades_recentes %}
+                        <div class="activity-item">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <div class="bg-{{ atividade.tipo_cor|default:'primary' }} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                        <i class="fas fa-{{ atividade.icone|default:'info' }}"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ atividade.titulo }}</h6>
+                                    <p class="mb-1 text-muted small">{{ atividade.descricao }}</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ atividade.data_criacao|timesince }} atrás
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-history fa-3x mb-3 opacity-50"></i>
+                            <p>Nenhuma atividade recente</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Prazos Vencendo -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                    Prazos Vencendo
+                </h5>
+                <a href="{% url 'processos:prazos_vencendo' %}" class="btn btn-sm btn-outline-warning">
+                    Ver Todos
+                </a>
+            </div>
+            <div class="card-body">
+                {% if prazos_vencendo %}
+                    {% for prazo in prazos_vencendo %}
+                    <div class="d-flex align-items-center mb-3 p-2 border-start-warning bg-light rounded">
+                        <div class="me-3">
+                            <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ prazo.titulo }}</h6>
+                            <small class="text-muted">
+                                <i class="fas fa-gavel me-1"></i>
+                                {{ prazo.processo.numero }}
+                                <span class="ms-2">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ prazo.data_vencimento|date:"d/m/Y" }}
+                                </span>
+                            </small>
+                        </div>
+                        <div>
+                            {% if prazo.dias_restantes <= 0 %}
+                                <span class="badge bg-danger">Vencido</span>
+                            {% elif prazo.dias_restantes <= 3 %}
+                                <span class="badge bg-warning text-dark">{{ prazo.dias_restantes }} dia{{ prazo.dias_restantes|pluralize }}</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ prazo.dias_restantes }} dia{{ prazo.dias_restantes|pluralize }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fa-3x mb-3 text-success opacity-50"></i>
+                        <p>Nenhum prazo vencendo</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Documentos Vencendo -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt me-2 text-danger"></i>
+                    Documentos Vencendo
+                </h5>
+                <a href="#" class="btn btn-sm btn-outline-danger">
+                    Ver Todos
+                </a>
+            </div>
+            <div class="card-body">
+                {% if documentos_vencendo %}
+                    {% for documento in documentos_vencendo %}
+                    <div class="d-flex align-items-center mb-3 p-2 border-start-danger bg-light rounded">
+                        <div class="me-3">
+                            <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-file"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ documento.nome }}</h6>
+                            <small class="text-muted">
+                                {% if documento.processo %}
+                                    <i class="fas fa-gavel me-1"></i>
+                                    {{ documento.processo.numero }}
+                                {% elif documento.cliente %}
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ documento.cliente.nome }}
+                                {% endif %}
+                                <span class="ms-2">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ documento.data_vencimento|date:"d/m/Y" }}
+                                </span>
+                            </small>
+                        </div>
+                        <div>
+                            {% if documento.dias_restantes <= 0 %}
+                                <span class="badge bg-danger">Vencido</span>
+                            {% elif documento.dias_restantes <= 7 %}
+                                <span class="badge bg-warning text-dark">{{ documento.dias_restantes }} dia{{ documento.dias_restantes|pluralize }}</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ documento.dias_restantes }} dia{{ documento.dias_restantes|pluralize }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fa-3x mb-3 text-success opacity-50"></i>
+                        <p>Nenhum documento vencendo</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Dados do gráfico vindos do Django
+const chartLabels = JSON.parse('{{ chart_labels|default:"[]" }}');
+const chartData = JSON.parse('{{ chart_data|default:"[]" }}');
+
+// Gráfico de Processos por Status
+const ctx = document.getElementById('processosChart').getContext('2d');
+const processosChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: chartLabels,
+        datasets: [{
+            data: chartData,
+            backgroundColor: [
+                '#007bff',
+                '#28a745',
+                '#ffc107',
+                '#dc3545',
+                '#6c757d',
+                '#17a2b8'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true
+                }
+            }
+        }
+    }
+});
+
+// Atualizar dados do gráfico
+document.querySelectorAll('input[name="chart-period"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        // Implementar atualização via AJAX
+        console.log('Período selecionado:', this.id);
+    });
+});
+
+// Auto-refresh da página a cada 5 minutos
+setTimeout(function() {
+    location.reload();
+}, 300000);
+</script>
+{% endblock %}

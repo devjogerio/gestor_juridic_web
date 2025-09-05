@@ -1,0 +1,709 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Documentos - Sistema de Gestão Jurídica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .document-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    
+    .document-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border-color: #007bff;
+    }
+    
+    .document-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .document-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .document-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .document-body {
+        padding: 1.5rem;
+    }
+    
+    .document-description {
+        color: #495057;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+    
+    .document-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid #e9ecef;
+    }
+    
+    .stat-number {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #007bff;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .document-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .btn-action {
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-1px);
+    }
+    
+    .btn-view {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+    }
+    
+    .btn-view:hover {
+        box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
+        color: white;
+    }
+    
+    .btn-download {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .btn-download:hover {
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        color: white;
+    }
+    
+    .btn-edit {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        color: #212529;
+    }
+    
+    .btn-edit:hover {
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        color: #212529;
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        color: white;
+    }
+    
+    .file-type-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .file-type-pdf {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+    
+    .file-type-doc {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    }
+    
+    .file-type-img {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .file-type-other {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+    
+    .search-filters {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+    
+    .form-group {
+        margin-bottom: 0;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .overview-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .overview-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .overview-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        margin: 0 auto 1rem;
+    }
+    
+    .overview-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .overview-label {
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.9rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-title {
+        font-size: 1.5rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-text {
+        color: #adb5bd;
+        margin-bottom: 2rem;
+    }
+    
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .page-link {
+        border-radius: 8px;
+        margin: 0 2px;
+        border: 1px solid #dee2e6;
+        color: #007bff;
+    }
+    
+    .page-link:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    
+    @media (max-width: 768px) {
+        .document-actions {
+            justify-content: center;
+        }
+        
+        .filter-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .document-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .document-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="fas fa-file-alt me-1"></i>Documentos
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+Gerenciamento de Documentos
+{% endblock %}
+
+{% block content %}
+<!-- Estatísticas Gerais -->
+<div class="stats-overview">
+    <div class="overview-card">
+        <div class="overview-icon" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="overview-number">{{ total_documentos }}</div>
+        <div class="overview-label">Total</div>
+    </div>
+    
+    <div class="overview-card">
+        <div class="overview-icon" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+            <i class="fas fa-file-pdf"></i>
+        </div>
+        <div class="overview-number">{{ documentos_pdf }}</div>
+        <div class="overview-label">PDFs</div>
+    </div>
+    
+    <div class="overview-card">
+        <div class="overview-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+            <i class="fas fa-image"></i>
+        </div>
+        <div class="overview-number">{{ documentos_imagem }}</div>
+        <div class="overview-label">Imagens</div>
+    </div>
+    
+    <div class="overview-card">
+        <div class="overview-icon" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
+            <i class="fas fa-file-word"></i>
+        </div>
+        <div class="overview-number">{{ documentos_doc }}</div>
+        <div class="overview-label">Documentos</div>
+    </div>
+</div>
+
+<!-- Filtros de Busca -->
+<div class="search-filters">
+    <form method="get" id="filterForm">
+        <div class="filter-row">
+            <div class="form-group">
+                <label for="search" class="form-label fw-bold">
+                    <i class="fas fa-search me-1"></i>Buscar
+                </label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       placeholder="Nome, descrição ou tags..." value="{{ request.GET.search }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="tipo" class="form-label fw-bold">
+                    <i class="fas fa-filter me-1"></i>Tipo
+                </label>
+                <select class="form-select" id="tipo" name="tipo">
+                    <option value="">Todos os tipos</option>
+                    <option value="contrato" {% if request.GET.tipo == 'contrato' %}selected{% endif %}>Contrato</option>
+                    <option value="peticao" {% if request.GET.tipo == 'peticao' %}selected{% endif %}>Petição</option>
+                    <option value="procuracao" {% if request.GET.tipo == 'procuracao' %}selected{% endif %}>Procuração</option>
+                    <option value="certidao" {% if request.GET.tipo == 'certidao' %}selected{% endif %}>Certidão</option>
+                    <option value="comprovante" {% if request.GET.tipo == 'comprovante' %}selected{% endif %}>Comprovante</option>
+                    <option value="outros" {% if request.GET.tipo == 'outros' %}selected{% endif %}>Outros</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="cliente" class="form-label fw-bold">
+                    <i class="fas fa-user me-1"></i>Cliente
+                </label>
+                <select class="form-select" id="cliente" name="cliente">
+                    <option value="">Todos os clientes</option>
+                    {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}" {% if request.GET.cliente == cliente.id|stringformat:'s' %}selected{% endif %}>
+                            {{ cliente.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="processo" class="form-label fw-bold">
+                    <i class="fas fa-gavel me-1"></i>Processo
+                </label>
+                <select class="form-select" id="processo" name="processo">
+                    <option value="">Todos os processos</option>
+                    {% for processo in processos %}
+                        <option value="{{ processo.id }}" {% if request.GET.processo == processo.id|stringformat:'s' %}selected{% endif %}>
+                            {{ processo.numero_processo }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>Filtrar
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Botão Adicionar -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0">
+        <i class="fas fa-list me-2"></i>
+        {% if documentos %}
+            {{ documentos|length }} documento{{ documentos|length|pluralize }} encontrado{{ documentos|length|pluralize }}
+        {% else %}
+            Nenhum documento encontrado
+        {% endif %}
+    </h5>
+    
+    <a href="{% url 'documentos:documento_create' %}" class="btn btn-success">
+        <i class="fas fa-plus me-2"></i>Novo Documento
+    </a>
+</div>
+
+<!-- Lista de Documentos -->
+{% if documentos %}
+    {% for documento in documentos %}
+    <div class="document-card">
+        <div class="document-header">
+            <div class="document-title">
+                {% if documento.arquivo %}
+                    {% if '.pdf' in documento.arquivo.name|lower %}
+                        <div class="file-type-icon file-type-pdf">PDF</div>
+                    {% elif '.doc' in documento.arquivo.name|lower or '.docx' in documento.arquivo.name|lower %}
+                        <div class="file-type-icon file-type-doc">DOC</div>
+                    {% elif '.jpg' in documento.arquivo.name|lower or '.png' in documento.arquivo.name|lower or '.jpeg' in documento.arquivo.name|lower %}
+                        <div class="file-type-icon file-type-img">IMG</div>
+                    {% else %}
+                        <div class="file-type-icon file-type-other">FILE</div>
+                    {% endif %}
+                {% else %}
+                    <div class="file-type-icon file-type-other">FILE</div>
+                {% endif %}
+                
+                <div>
+                    <div>{{ documento.nome }}</div>
+                    <small class="text-muted">{{ documento.get_tipo_display }}</small>
+                </div>
+            </div>
+            
+            <div class="document-meta">
+                {% if documento.cliente %}
+                <div class="meta-item">
+                    <i class="fas fa-user"></i>
+                    <span>{{ documento.cliente.nome }}</span>
+                </div>
+                {% endif %}
+                
+                {% if documento.processo %}
+                <div class="meta-item">
+                    <i class="fas fa-gavel"></i>
+                    <span>{{ documento.processo.numero_processo }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>{{ documento.data_upload|date:"d/m/Y H:i" }}</span>
+                </div>
+                
+                {% if documento.arquivo %}
+                <div class="meta-item">
+                    <i class="fas fa-file"></i>
+                    <span>{{ documento.arquivo.size|filesizeformat }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="document-body">
+            {% if documento.descricao %}
+            <div class="document-description">
+                {{ documento.descricao|truncatewords:30 }}
+            </div>
+            {% endif %}
+            
+            {% if documento.tags %}
+            <div class="mb-3">
+                <small class="text-muted me-2">Tags:</small>
+                {% for tag in documento.tags.all %}
+                    <span class="badge bg-light text-dark me-1">
+                        <i class="fas fa-tag me-1"></i>{{ tag.nome }}
+                    </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="document-actions">
+                <a href="{% url 'documentos:documento_detail' documento.pk %}" class="btn btn-action btn-view">
+                    <i class="fas fa-eye me-1"></i>Visualizar
+                </a>
+                
+                {% if documento.arquivo %}
+                <a href="{{ documento.arquivo.url }}" class="btn btn-action btn-download" target="_blank">
+                    <i class="fas fa-download me-1"></i>Download
+                </a>
+                {% endif %}
+                
+                <a href="{% url 'documentos:documento_update' documento.pk %}" class="btn btn-action btn-edit">
+                    <i class="fas fa-edit me-1"></i>Editar
+                </a>
+                
+                <a href="{% url 'documentos:documento_delete' documento.pk %}" class="btn btn-action btn-delete" 
+                   onclick="return confirm('Tem certeza que deseja excluir este documento?')">
+                    <i class="fas fa-trash me-1"></i>Excluir
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Paginação -->
+    {% if is_paginated %}
+    <div class="pagination-wrapper">
+        <nav aria-label="Navegação de páginas">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.processo %}&processo={{ request.GET.processo }}{% endif %}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.processo %}&processo={{ request.GET.processo }}{% endif %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.processo %}&processo={{ request.GET.processo }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.processo %}&processo={{ request.GET.processo }}{% endif %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.processo %}&processo={{ request.GET.processo }}{% endif %}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+    
+{% else %}
+    <!-- Estado Vazio -->
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <h3 class="empty-title">Nenhum documento encontrado</h3>
+        <p class="empty-text">
+            {% if request.GET.search or request.GET.tipo or request.GET.cliente or request.GET.processo %}
+                Não foram encontrados documentos com os filtros aplicados.
+                <br>Tente ajustar os critérios de busca.
+            {% else %}
+                Você ainda não possui documentos cadastrados.
+                <br>Comece adicionando seu primeiro documento.
+            {% endif %}
+        </p>
+        <a href="{% url 'documentos:documento_create' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus me-2"></i>Adicionar Primeiro Documento
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Busca em tempo real
+    const searchInput = document.getElementById('search');
+    const filterForm = document.getElementById('filterForm');
+    let searchTimeout;
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                filterForm.submit();
+            }, 500);
+        });
+    }
+    
+    // Auto-submit nos selects
+    const selectFilters = document.querySelectorAll('#tipo, #cliente, #processo');
+    selectFilters.forEach(function(select) {
+        select.addEventListener('change', function() {
+            filterForm.submit();
+        });
+    });
+    
+    // Confirmação de exclusão
+    const deleteButtons = document.querySelectorAll('.btn-delete');
+    deleteButtons.forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const documentName = this.closest('.document-card').querySelector('.document-title div div').textContent;
+            
+            if (confirm(`Tem certeza que deseja excluir o documento "${documentName}"?\n\nEsta ação não pode ser desfeita.`)) {
+                window.location.href = this.href;
+            }
+        });
+    });
+    
+    // Animação de hover nos cards
+    const documentCards = document.querySelectorAll('.document-card');
+    documentCards.forEach(function(card) {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-3px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Tooltip para arquivos grandes
+    const fileSizes = document.querySelectorAll('.meta-item span');
+    fileSizes.forEach(function(sizeElement) {
+        const text = sizeElement.textContent;
+        if (text.includes('MB') || text.includes('GB')) {
+            const size = parseFloat(text);
+            if (size > 10) {
+                sizeElement.title = 'Arquivo grande - pode demorar para fazer download';
+                sizeElement.style.color = '#ffc107';
+            }
+        }
+    });
+    
+    // Lazy loading para preview de imagens (se implementado)
+    const imageCards = document.querySelectorAll('.file-type-img');
+    imageCards.forEach(function(imgCard) {
+        imgCard.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Aqui poderia implementar um modal de preview
+            console.log('Preview de imagem clicado');
+        });
+    });
+});
+</script>
+{% endblock %}

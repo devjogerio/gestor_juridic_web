@@ -1,0 +1,496 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ object.nome }} - Cliente - Sistema de Gestão Jurídica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .info-card {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .info-value {
+        font-size: 1.1rem;
+        color: #495057;
+        margin-top: 0.25rem;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .timeline-item {
+        border-left: 3px solid #007bff;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 0.5rem;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #007bff;
+    }
+    
+    .action-buttons {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'clientes:cliente_list' %}">
+                <i class="fas fa-users me-1"></i>Clientes
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            {{ object.nome }}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+{{ object.nome }}
+<div class="d-flex align-items-center ms-auto">
+    {% if object.ativo %}
+        <span class="badge bg-success me-3">Ativo</span>
+    {% else %}
+        <span class="badge bg-secondary me-3">Inativo</span>
+    {% endif %}
+    <div class="btn-group">
+        <a href="{% url 'clientes:cliente_update' object.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit me-2"></i>Editar
+        </a>
+        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="visually-hidden">Toggle Dropdown</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item" href="{% url 'processos:processo_create' %}?cliente={{ object.pk }}">
+                    <i class="fas fa-gavel me-2"></i>Novo Processo
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#">
+                    <i class="fas fa-calendar-plus me-2"></i>Novo Compromisso
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'documentos:documento_create' %}?cliente={{ object.pk }}">
+                    <i class="fas fa-file-plus me-2"></i>Novo Documento
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item text-danger" href="{% url 'clientes:cliente_delete' object.pk %}" 
+                   data-confirm-delete="Tem certeza que deseja excluir o cliente {{ object.nome }}?">
+                    <i class="fas fa-trash me-2"></i>Excluir Cliente
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Coluna Principal -->
+    <div class="col-lg-8">
+        <!-- Cabeçalho do Perfil -->
+        <div class="profile-header">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <div class="profile-avatar">
+                        {{ object.nome|first|upper }}
+                    </div>
+                </div>
+                <div class="col">
+                    <h2 class="mb-2">{{ object.nome }}</h2>
+                    <p class="mb-2">
+                        <i class="fas fa-id-card me-2"></i>
+                        {{ object.cpf_cnpj }} - {{ object.get_tipo_display }}
+                    </p>
+                    {% if object.email %}
+                        <p class="mb-2">
+                            <i class="fas fa-envelope me-2"></i>
+                            <a href="mailto:{{ object.email }}" class="text-white text-decoration-none">
+                                {{ object.email }}
+                            </a>
+                        </p>
+                    {% endif %}
+                    {% if object.telefone %}
+                        <p class="mb-0">
+                            <i class="fas fa-phone me-2"></i>
+                            <a href="tel:{{ object.telefone }}" class="text-white text-decoration-none">
+                                {{ object.telefone }}
+                            </a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informações Pessoais -->
+        <div class="info-card">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Informações Pessoais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% if object.data_nascimento %}
+                            <div class="info-item">
+                                <div class="info-label">Data de Nascimento</div>
+                                <div class="info-value">{{ object.data_nascimento|date:"d/m/Y" }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if object.estado_civil %}
+                            <div class="info-item">
+                                <div class="info-label">Estado Civil</div>
+                                <div class="info-value">{{ object.get_estado_civil_display }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if object.profissao %}
+                            <div class="info-item">
+                                <div class="info-label">Profissão</div>
+                                <div class="info-value">{{ object.profissao }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if object.rg %}
+                            <div class="info-item">
+                                <div class="info-label">RG</div>
+                                <div class="info-value">{{ object.rg }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if object.nacionalidade %}
+                            <div class="info-item">
+                                <div class="info-label">Nacionalidade</div>
+                                <div class="info-value">{{ object.nacionalidade }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Endereço -->
+        {% if object.endereco or object.cidade or object.estado or object.cep %}
+        <div class="info-card">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>Endereço
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            {% if object.endereco %}
+                            <div class="info-item">
+                                <div class="info-label">Logradouro</div>
+                                <div class="info-value">{{ object.endereco }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            {% if object.cep %}
+                            <div class="info-item">
+                                <div class="info-label">CEP</div>
+                                <div class="info-value">{{ object.cep }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if object.cidade %}
+                            <div class="info-item">
+                                <div class="info-label">Cidade</div>
+                                <div class="info-value">{{ object.cidade }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if object.estado %}
+                            <div class="info-item">
+                                <div class="info-label">Estado</div>
+                                <div class="info-value">{{ object.estado }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Observações -->
+        {% if object.observacoes %}
+        <div class="info-card">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sticky-note me-2"></i>Observações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ object.observacoes|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Atividade Recente -->
+        <div class="info-card">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Atividade Recente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">Cliente cadastrado</h6>
+                                <p class="text-muted mb-0">Cliente foi adicionado ao sistema</p>
+                            </div>
+                            <small class="text-muted">{{ object.data_cadastro|date:"d/m/Y H:i" }}</small>
+                        </div>
+                    </div>
+                    
+                    {% if object.data_atualizacao != object.data_cadastro %}
+                    <div class="timeline-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">Dados atualizados</h6>
+                                <p class="text-muted mb-0">Informações do cliente foram modificadas</p>
+                            </div>
+                            <small class="text-muted">{{ object.data_atualizacao|date:"d/m/Y H:i" }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Estatísticas -->
+        <div class="row">
+            <div class="col-6">
+                <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="stats-number">{{ object.processos.count }}</div>
+                    <div class="stats-label">Processo{{ object.processos.count|pluralize }}</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="stats-number">{{ object.documentos.count }}</div>
+                    <div class="stats-label">Documento{{ object.documentos.count|pluralize }}</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="stats-number">{{ object.compromissos.count }}</div>
+                    <div class="stats-label">Compromisso{{ object.compromissos.count|pluralize }}</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="stats-number">{{ object.movimentacoes_financeiras.count }}</div>
+                    <div class="stats-label">Movimentaç{{ object.movimentacoes_financeiras.count|pluralize:"ão,ões" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ações Rápidas -->
+        <div class="action-buttons">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'processos:processo_create' %}?cliente={{ object.pk }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-gavel me-2"></i>Novo Processo
+                        </a>
+                        <a href="#" 
+                           class="btn btn-outline-info">
+                            <i class="fas fa-calendar-plus me-2"></i>Agendar Compromisso
+                        </a>
+                        <a href="{% url 'documentos:documento_create' %}?cliente={{ object.pk }}" 
+                           class="btn btn-outline-success">
+                            <i class="fas fa-file-plus me-2"></i>Adicionar Documento
+                        </a>
+                        <a href="{% url 'financeiro:financeiro_create' %}?cliente={{ object.pk }}" 
+                           class="btn btn-outline-warning">
+                            <i class="fas fa-dollar-sign me-2"></i>Nova Movimentação
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Processos Recentes -->
+        {% if object.processos.all %}
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-gavel me-2"></i>Processos Recentes
+                </h6>
+                <a href="{% url 'processos:processo_list' %}?cliente={{ object.pk }}" class="btn btn-sm btn-outline-primary">
+                    Ver Todos
+                </a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for processo in object.processos.all|slice:":5" %}
+                <a href="{% url 'processos:processo_detail' processo.pk %}" 
+                   class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ processo.numero_processo }}</h6>
+                        <small class="text-muted">{{ processo.data_cadastro|date:"d/m/Y" }}</small>
+                    </div>
+                    <p class="mb-1">{{ processo.assunto|truncatechars:50 }}</p>
+                    <small class="text-muted">{{ processo.get_status_display }}</small>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Compromissos Próximos -->
+        {% if object.compromissos.all %}
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-calendar me-2"></i>Próximos Compromissos
+                </h6>
+                <a href="#" class="btn btn-sm btn-outline-info">
+                    Ver Todos
+                </a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for compromisso in object.compromissos.all|slice:":3" %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ compromisso.titulo }}</h6>
+                        <small class="text-muted">{{ compromisso.data_hora|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <p class="mb-1">{{ compromisso.descricao|truncatechars:50 }}</p>
+                    {% if compromisso.realizado %}
+                        <span class="badge bg-success">Realizado</span>
+                    {% else %}
+                        <span class="badge bg-warning">Pendente</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confirmação de exclusão
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteLinks = document.querySelectorAll('[data-confirm-delete]');
+    deleteLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const message = this.getAttribute('data-confirm-delete');
+            if (confirm(message)) {
+                window.location.href = this.href;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

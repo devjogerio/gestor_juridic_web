@@ -1,0 +1,475 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Processos - Sistema de Gestão Jurídica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .process-card {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    .process-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    
+    .process-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .process-number {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+    
+    .process-subject {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-weight: 600;
+    }
+    
+    .priority-indicator {
+        width: 4px;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 0 0 0 10px;
+    }
+    
+    .priority-alta { background-color: #dc3545; }
+    .priority-media { background-color: #ffc107; }
+    .priority-baixa { background-color: #28a745; }
+    
+    .search-box {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .search-box:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .process-stats {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-top: 1rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 0.5rem;
+    }
+    
+    .stat-number {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .client-link {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .client-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="fas fa-gavel me-1"></i>Processos
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+Processos
+<div class="d-flex align-items-center ms-auto">
+    <span class="badge bg-primary me-3">{{ object_list.count }} processo{{ object_list.count|pluralize }}</span>
+    <a href="{% url 'processos:processo_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Novo Processo
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Estatísticas Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-gavel fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ total_processos }}</h4>
+                <small>Total de Processos</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-play fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ processos_andamento }}</h4>
+                <small>Em Andamento</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ processos_suspensos }}</h4>
+                <small>Suspensos</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-check fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ processos_finalizados }}</h4>
+                <small>Finalizados</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="filter-card">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="numero_processo" class="form-label">Número do Processo</label>
+                <input type="text" class="form-control search-box" id="numero_processo" name="numero_processo" 
+                       value="{{ request.GET.numero_processo }}" placeholder="0000000-00.0000.0.00.0000">
+            </div>
+            <div class="col-md-3">
+                <label for="assunto" class="form-label">Assunto</label>
+                <input type="text" class="form-control" id="assunto" name="assunto" 
+                       value="{{ request.GET.assunto }}" placeholder="Buscar por assunto...">
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Todos</option>
+                    <option value="ativo" {% if request.GET.status == 'ativo' %}selected{% endif %}>Ativo</option>
+                    <option value="suspenso" {% if request.GET.status == 'suspenso' %}selected{% endif %}>Suspenso</option>
+                    <option value="finalizado" {% if request.GET.status == 'finalizado' %}selected{% endif %}>Finalizado</option>
+                    <option value="arquivado" {% if request.GET.status == 'arquivado' %}selected{% endif %}>Arquivado</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="prioridade" class="form-label">Prioridade</label>
+                <select class="form-select" id="prioridade" name="prioridade">
+                    <option value="">Todas</option>
+                    <option value="alta" {% if request.GET.prioridade == 'alta' %}selected{% endif %}>Alta</option>
+                    <option value="media" {% if request.GET.prioridade == 'media' %}selected{% endif %}>Média</option>
+                    <option value="baixa" {% if request.GET.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="cliente" class="form-label">Cliente</label>
+                <select class="form-select" id="cliente" name="cliente">
+                    <option value="">Todos</option>
+                    {% for cliente in clientes %}
+                        <option value="{{ cliente.pk }}" {% if request.GET.cliente == cliente.pk|stringformat:'s' %}selected{% endif %}>
+                            {{ cliente.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-12">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Filtrar
+                    </button>
+                    <a href="{% url 'processos:processo_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Limpar
+                    </a>
+                    <a href="{% url 'processos:processo_exportar' %}" class="btn btn-outline-success ms-auto">
+                        <i class="fas fa-download me-2"></i>Exportar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Processos -->
+<div class="row">
+    {% for processo in object_list %}
+    <div class="col-lg-6 col-xl-4">
+        <div class="card process-card h-100 position-relative">
+            <div class="priority-indicator priority-{{ processo.prioridade }}"></div>
+            
+            <div class="process-header">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="process-number">{{ processo.numero_processo }}</div>
+                        <p class="process-subject">{{ processo.assunto|truncatechars:50 }}</p>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-light" type="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'processos:processo_detail' processo.pk %}">
+                                    <i class="fas fa-eye me-2"></i>Visualizar
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'processos:processo_update' processo.pk %}">
+                                    <i class="fas fa-edit me-2"></i>Editar
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'processos:processo_delete' processo.pk %}" 
+                                   data-confirm-delete="Tem certeza que deseja excluir o processo {{ processo.numero_processo }}?">
+                                    <i class="fas fa-trash me-2"></i>Excluir
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    {% if processo.status == 'ativo' %}
+                        <span class="badge bg-success status-badge me-2">Ativo</span>
+                    {% elif processo.status == 'suspenso' %}
+                        <span class="badge bg-warning status-badge me-2">Suspenso</span>
+                    {% elif processo.status == 'finalizado' %}
+                        <span class="badge bg-info status-badge me-2">Finalizado</span>
+                    {% elif processo.status == 'arquivado' %}
+                        <span class="badge bg-secondary status-badge me-2">Arquivado</span>
+                    {% endif %}
+                    
+                    <span class="badge bg-light text-dark status-badge">
+                        {{ processo.get_prioridade_display }}
+                    </span>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted mb-1">
+                        <i class="fas fa-user me-1"></i>Cliente
+                    </h6>
+                    <a href="{% url 'clientes:cliente_detail' processo.cliente.pk %}" class="client-link">
+                        {{ processo.cliente.nome }}
+                    </a>
+                </div>
+                
+                {% if processo.tribunal %}
+                <div class="mb-3">
+                    <h6 class="text-muted mb-1">
+                        <i class="fas fa-building me-1"></i>Tribunal
+                    </h6>
+                    <p class="mb-0">{{ processo.tribunal }}</p>
+                </div>
+                {% endif %}
+                
+                {% if processo.valor_causa %}
+                <div class="mb-3">
+                    <h6 class="text-muted mb-1">
+                        <i class="fas fa-dollar-sign me-1"></i>Valor da Causa
+                    </h6>
+                    <p class="mb-0 fw-bold text-success">R$ {{ processo.valor_causa|floatformat:2 }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="process-stats">
+                    <div class="row">
+                        <div class="col-4 stat-item">
+                            <div class="stat-number">{{ processo.andamentos.count }}</div>
+                            <div class="stat-label">Andamentos</div>
+                        </div>
+                        <div class="col-4 stat-item">
+                            <div class="stat-number">{{ processo.documentos.count }}</div>
+                            <div class="stat-label">Documentos</div>
+                        </div>
+                        <div class="col-4 stat-item">
+                            <div class="stat-number">{{ processo.prazos.count }}</div>
+                            <div class="stat-label">Prazos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-light">
+                <div class="d-flex align-items-center justify-content-between">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ processo.data_cadastro|date:"d/m/Y" }}
+                    </small>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'processos:processo_detail' processo.pk %}" 
+                           class="btn btn-outline-primary" title="Visualizar">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="#" 
+                           class="btn btn-outline-info" title="Agendar">
+                            <i class="fas fa-calendar-plus"></i>
+                        </a>
+                        <a href="{% url 'documentos:documento_create' %}?processo={{ processo.pk }}" 
+                           class="btn btn-outline-success" title="Documento">
+                            <i class="fas fa-file-plus"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-gavel fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">Nenhum processo encontrado</h4>
+                <p class="text-muted mb-4">
+                    {% if request.GET.numero_processo or request.GET.assunto or request.GET.status or request.GET.prioridade or request.GET.cliente %}
+                        Nenhum processo corresponde aos filtros aplicados.
+                    {% else %}
+                        Você ainda não cadastrou nenhum processo.
+                    {% endif %}
+                </p>
+                <a href="{% url 'processos:processo_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Cadastrar Primeiro Processo
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Paginação -->
+{% if is_paginated %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Navegação de páginas">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
+<div class="text-center text-muted mt-3">
+    Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} processo{{ page_obj.paginator.count|pluralize }}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Busca em tempo real
+const searchInputs = document.querySelectorAll('.search-box');
+searchInputs.forEach(function(input) {
+    let searchTimeout;
+    input.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() {
+            if (input.value.length >= 3 || input.value.length === 0) {
+                input.form.submit();
+            }
+        }, 500);
+    });
+});
+
+// Confirmação de exclusão
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteLinks = document.querySelectorAll('[data-confirm-delete]');
+    deleteLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const message = this.getAttribute('data-confirm-delete');
+            if (confirm(message)) {
+                window.location.href = this.href;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

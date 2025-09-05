@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Excluir Cliente - {{ object.nome }} - Sistema de Gestão Jurídica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+        max-width: 600px;
+        margin: 2rem auto;
+    }
+    
+    .delete-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .delete-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+    }
+    
+    .delete-body {
+        padding: 2rem;
+    }
+    
+    .client-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+    
+    .info-value {
+        color: #495057;
+    }
+    
+    .warning-box {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .warning-title {
+        color: #856404;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .warning-text {
+        color: #856404;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    .related-items {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .related-title {
+        color: #721c24;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .related-list {
+        color: #721c24;
+        font-size: 0.9rem;
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    }
+    
+    .btn-cancel {
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'clientes:cliente_list' %}">
+                <i class="fas fa-users me-1"></i>Clientes
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'clientes:cliente_detail' object.pk %}">
+                {{ object.nome }}
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            Excluir
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-exclamation-triangle me-2 text-danger"></i>Confirmar Exclusão
+{% endblock %}
+
+{% block content %}
+<div class="delete-card">
+    <div class="delete-header">
+        <div class="delete-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="mb-0">Excluir Cliente</h3>
+        <p class="mb-0 mt-2 opacity-75">Esta ação não pode ser desfeita</p>
+    </div>
+    
+    <div class="delete-body">
+        <p class="text-center mb-4">
+            Tem certeza que deseja excluir o cliente <strong>{{ object.nome }}</strong>?
+        </p>
+        
+        <!-- Informações do Cliente -->
+        <div class="client-info">
+            <h6 class="mb-3">
+                <i class="fas fa-user me-2"></i>Informações do Cliente
+            </h6>
+            
+            <div class="info-row">
+                <span class="info-label">Nome:</span>
+                <span class="info-value">{{ object.nome }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">{{ object.get_tipo_display }}:</span>
+                <span class="info-value">{{ object.cpf_cnpj }}</span>
+            </div>
+            
+            {% if object.email %}
+            <div class="info-row">
+                <span class="info-label">E-mail:</span>
+                <span class="info-value">{{ object.email }}</span>
+            </div>
+            {% endif %}
+            
+            {% if object.telefone %}
+            <div class="info-row">
+                <span class="info-label">Telefone:</span>
+                <span class="info-value">{{ object.telefone }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="info-row">
+                <span class="info-label">Cadastrado em:</span>
+                <span class="info-value">{{ object.data_cadastro|date:"d/m/Y H:i" }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Status:</span>
+                <span class="info-value">
+                    {% if object.ativo %}
+                        <span class="badge bg-success">Ativo</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inativo</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Verificar itens relacionados -->
+        {% if object.processos.exists or object.documentos.exists or object.compromissos.exists or object.movimentacoes_financeiras.exists %}
+        <div class="related-items">
+            <div class="related-title">
+                <i class="fas fa-exclamation-circle me-2"></i>Itens Relacionados
+            </div>
+            <p class="related-text mb-2">
+                Este cliente possui os seguintes itens relacionados que também serão excluídos:
+            </p>
+            <ul class="related-list">
+                {% if object.processos.exists %}
+                    <li>{{ object.processos.count }} processo{{ object.processos.count|pluralize }}</li>
+                {% endif %}
+                {% if object.documentos.exists %}
+                    <li>{{ object.documentos.count }} documento{{ object.documentos.count|pluralize }}</li>
+                {% endif %}
+                {% if object.compromissos.exists %}
+                    <li>{{ object.compromissos.count }} compromisso{{ object.compromissos.count|pluralize }}</li>
+                {% endif %}
+                {% if object.movimentacoes_financeiras.exists %}
+                    <li>{{ object.movimentacoes_financeiras.count }} movimentação{{ object.movimentacoes_financeiras.count|pluralize:"ão,ões" }} financeira{{ object.movimentacoes_financeiras.count|pluralize }}</li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Aviso -->
+        <div class="warning-box">
+            <div class="warning-title">
+                <i class="fas fa-exclamation-triangle me-2"></i>Atenção
+            </div>
+            <p class="warning-text">
+                Esta ação é <strong>irreversível</strong>. Todos os dados relacionados a este cliente 
+                serão permanentemente removidos do sistema, incluindo processos, documentos, 
+                compromissos e movimentações financeiras.
+            </p>
+        </div>
+        
+        <!-- Formulário de Confirmação -->
+        <form method="post" class="text-center">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="{% url 'clientes:cliente_detail' object.pk %}" 
+                   class="btn btn-outline-secondary btn-cancel">
+                    <i class="fas fa-arrow-left me-2"></i>Cancelar
+                </a>
+                <button type="submit" class="btn btn-danger btn-delete" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>Confirmar Exclusão
+                </button>
+            </div>
+        </form>
+        
+        <!-- Checkbox de Confirmação -->
+        <div class="form-check mt-4 text-center">
+            <input class="form-check-input" type="checkbox" id="confirmCheck">
+            <label class="form-check-label text-muted" for="confirmCheck">
+                Eu entendo que esta ação não pode ser desfeita
+            </label>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheck = document.getElementById('confirmCheck');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    // Desabilitar botão inicialmente
+    confirmBtn.disabled = true;
+    confirmBtn.classList.add('disabled');
+    
+    // Habilitar/desabilitar botão baseado no checkbox
+    confirmCheck.addEventListener('change', function() {
+        if (this.checked) {
+            confirmBtn.disabled = false;
+            confirmBtn.classList.remove('disabled');
+        } else {
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('disabled');
+        }
+    });
+    
+    // Confirmação adicional no submit
+    confirmBtn.addEventListener('click', function(e) {
+        if (!confirmCheck.checked) {
+            e.preventDefault();
+            showToast('Por favor, confirme que você entende que esta ação não pode ser desfeita.', 'warning');
+            return false;
+        }
+        
+        // Confirmação final
+        const confirmed = confirm(
+            'ÚLTIMA CONFIRMAÇÃO:\n\n' +
+            'Você está prestes a excluir permanentemente o cliente "{{ object.nome }}" ' +
+            'e todos os seus dados relacionados.\n\n' +
+            'Esta ação NÃO PODE ser desfeita.\n\n' +
+            'Deseja continuar?'
+        );
+        
+        if (!confirmed) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Mostrar loading
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Excluindo...';
+        confirmBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}
